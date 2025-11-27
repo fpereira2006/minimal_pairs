@@ -307,7 +307,7 @@
     <div id="pairLabel"></div>
 
     <button class="btn" id="playBtn">▶ Play (A)</button>
-    <button class="btn" id="sortBtn">🔀 Sort (A or B)</button>
+    <!-- Sort button removed -->
     <!-- Next pair only on desktop -->
     <button class="btn desktop-only" id="nextBtn">Next Pair ➜</button>
 
@@ -585,7 +585,6 @@
   const pairLabel = document.getElementById("pairLabel");
 
   const playBtn = document.getElementById("playBtn");
-  const sortBtn = document.getElementById("sortBtn");
   const nextBtn = document.getElementById("nextBtn");
 
   const revealTitle = document.getElementById("revealTitle");
@@ -851,11 +850,18 @@
     }
 
     recordAttempt(isCorrect);
+
+    // After 1 second, behave exactly like the old Sort button
+    setTimeout(sortWord, 1000);
   }
 
   // ============================================
   // GLOBAL NEXT/PREVIOUS (ACROSS ALL GROUPS)
   // ============================================
+  function getTotalPairsCount() {
+    return groups.reduce((sum, g) => sum + g.pairs.length, 0);
+  }
+
   function nextPair() {
     const totalPairs = getTotalPairsCount();
     let attempts = 0;
@@ -936,7 +942,6 @@
   });
 
   playBtn.addEventListener("click", playWordA);
-  sortBtn.addEventListener("click", sortWord);
   nextBtn.addEventListener("click", nextPair);
 
   clearPairBtn.addEventListener("click", clearStatsForCurrentPair);
