@@ -85,6 +85,9 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       width: 480px;
       max-width: 100%;
+      /* animation for swipe */
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      will-change: transform, opacity;
     }
 
     #ipaLabel {
@@ -647,7 +650,7 @@
   function updateStatsDisplay() {
     const statsKey = "group" + gIndex + "_pair" + pIndex;
     const statsMap = loadStatsMap();
-    const list = statsMap[statsKey] || [];
+    let list = statsMap[statsKey] || [];
     const today = getToday();
 
     let todayAttempts = 0;
@@ -857,7 +860,7 @@
     updateUI();
   }
 
-  // NEW: go to previous pair (respecting hidden ones)
+  // go to previous pair (respecting hidden ones)
   function previousPair() {
     const group = groups[gIndex];
     const total = group.pairs.length;
@@ -931,19 +934,86 @@
   });
 
   // ============================================
-  // SWIPE GESTURE ON CARD (LEFT/RIGHT)
+  // SWIPE GESTURE ON CARD (LEFT/RIGHT) WITH ANIMATION
   // ============================================
   let touchStartX = null;
   let touchStartY = null;
+  let isDragging = false;
+
+  function resetCardPosition() {
+    card.style.transition = "transform 0.25s ease, opacity 0.25s ease";
+    card.style.transform = "translateX(0)";
+    card.style.opacity = "1";
+  }
+
+  function animateToNewPair(direction, changePairFn) {
+    // slide card out in swipe direction
+    const screenWidth = window.innerWidth || 400;
+    card.style.transition = "transform 0.25s ease, opacity 0.25s ease";
+    card.style.transform = "translateX(" + (direction * screenWidth) + "px)";
+    card.style.opacity = "0";
+
+    setTimeout(() => {
+      // change pair
+      changePairFn();
+
+      // bring card from opposite side
+      card.style.transition = "none";
+      card.style.transform = "translateX(" + (-direction * screenWidth) + "px)";
+      card.style.opacity = "0";
+
+      // force reflow
+      void card.offsetWidth;
+
+      card.style.transition = "transform 0.25s ease, opacity 0.25s ease";
+      card.style.transform = "translateX(0)";
+      card.style.opacity = "1";
+    }, 250);
+  }
 
   card.addEventListener("touchstart", (e) => {
     if (e.touches.length !== 1) return;
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
+    isDragging = true;
+
+    // disable transition while dragging
+    card.style.transition = "none";
   });
 
+  card.addEventListener("touchmove", (e) => {
+    if (!isDragging || e.touches.length !== 1) return;
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+
+    const dx = currentX - touchStartX;
+    const dy = currentY - touchStartY;
+
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+
+    // Only react strongly to mostly horizontal moves
+    if (absDx > absDy) {
+      // small follow effect + a bit of opacity change
+      const translateX = dx * 0.3;
+      const opacityDrop = Math.min(0.4, absDx / 400);
+      card.style.transform = "translateX(" + translateX + "px)";
+      card.style.opacity = (1 - opacityDrop).toString();
+
+      // optionally, prevent vertical scroll when clearly swiping horizontally
+      e.preventDefault();
+    }
+  }, { passive: false });
+
   card.addEventListener("touchend", (e) => {
-    if (touchStartX === null || touchStartY === null) return;
+    if (!isDragging) return;
+    isDragging = false;
+
+    if (touchStartX === null || touchStartY === null) {
+      resetCardPosition();
+      return;
+    }
+
     const touchEndX = e.changedTouches[0].clientX;
     const touchEndY = e.changedTouches[0].clientY;
 
@@ -952,22 +1022,31 @@
 
     const absDx = Math.abs(dx);
     const absDy = Math.abs(dy);
-
     const SWIPE_THRESHOLD = 50; // px
+
+    touchStartX = null;
+    touchStartY = null;
 
     // Only treat mostly horizontal, long enough swipe
     if (absDx > absDy && absDx > SWIPE_THRESHOLD) {
       if (dx < 0) {
-        // swipe left -> next pair
-        nextPair();
+        // swipe left -> next pair with animation
+        animateToNewPair(-1, nextPair);
       } else {
-        // swipe right -> previous pair
-        previousPair();
+        // swipe right -> previous pair with animation
+        animateToNewPair(1, previousPair);
       }
+    } else {
+      // not enough swipe: snap back
+      resetCardPosition();
     }
+  });
 
+  card.addEventListener("touchcancel", () => {
+    isDragging = false;
     touchStartX = null;
     touchStartY = null;
+    resetCardPosition();
   });
 
   // ============================================
