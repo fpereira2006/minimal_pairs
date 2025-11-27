@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Minimal Pair Listening Game</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      height: 100vh;
+      display: flex;
+      background: #f5f5f5;
+    }
+
+    .sidebar {
+      width: 280px;
+      background: #111827;
+      color: #e5e7eb;
+      padding: 16px 12px;
+      overflow-y: auto;
+      border-right: 3px solid #4f46e5;
+    }
+
+    .sidebar h1 {
+      font-size: 1.1rem;
+      margin: 0 0 12px;
+      padding: 0 8px;
+    }
+
+    .group-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #a5b4fc;
+      margin: 8px 0 4px;
+      padding: 4px 8px;
+      background: #1f2937;
+      border-radius: 6px;
+    }
+
+    .pair-button {
+      width: 100%;
+      padding: 6px 8px;
+      background: transparent;
+      border: none;
+      text-align: left;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .pair-button:hover { background: #374151; }
+    .pair-button.active { background: #4f46e5; }
+
+    /* skipped pairs in sidebar (strikethrough + lighter) */
+    .pair-button.skipped {
+      text-decoration: line-through;
+      opacity: 0.5;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: #fff;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      width: 480px;
+    }
+
+    #ipaLabel {
+      font-size: 0.9rem;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+
+    #pairLabel {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    #variantSelectorBox {
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+      color: #333;
+    }
+
+    .variant-btn {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 2px 6px;
+      background: #e5e7eb;
+      border-radius: 50%;
+      font-size: 0.8rem;
+      cursor: pointer;
+      border: 1px solid #ccc;
+    }
+
+    .variant-btn:hover { background: #d1d5db; }
+
+    .btn {
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: #4f46e5;
+      border: none;
+      color: white;
+      cursor: pointer;
+      margin-right: 8px;
+      margin-bottom: 12px;
+    }
+
+    .hidden-word-card {
+      border-radius: 12px;
+      border: 2px dashed #d1d5db;
+      background: #f9fafb;
+      padding: 24px;
+      text-align: center;
+      margin-top: 12px;
+      cursor: default;
+    }
+
+    #revealTitle {
+      font-size: 0.9rem;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+
+    #revealValue {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: #4b5563;
+    }
+
+    #statusText {
+      margin-top: 10px;
+      color: #555;
+      font-size: 0.85rem;
+      min-height: 1.2em;
+    }
+
+    /* WORDS IN RESULT — BIGGER & CLICKABLE */
+    .word-option {
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      font-size: 2rem;
+      transition: color 0.2s;
+    }
+
+    .word-correct { color: #16a34a !important; font-weight: 700; }
+    .word-wrong   { color: #dc2626 !important; font-weight: 700; }
+  </style>
+</head>
+
+<body>
+
+<aside class="sidebar">
+  <h1>Minimal Pair Groups</h1>
+  <button class="btn" id="clearAllBtn">Clear all stats</button>
+  <div id="sidebar-content"></div>
+</aside>
+
+<main class="main">
+  <div class="card">
+
+    <div id="ipaLabel"></div>
+
+    <div id="variantSelectorBox">
+      Variants:
+      <select id="variantSelector">
+        <option selected>1</option>
+        <option>2</option>
+        <option>3</option>
+        <option>4</option>
+      </select>
+    </div>
+
+    <div id="pairLabel"></div>
+
+    <button class="btn" id="playBtn">▶ Play (A)</button>
+    <button class="btn" id="sortBtn">🔀 Sort (A or B)</button>
+    <button class="btn" id="nextBtn">Next Pair ➜</button>
+
+    <div class="hidden-word-card" id="revealCard">
+      <div id="revealTitle">Choose the word you heard</div>
+      <div id="revealValue"></div>
+    </div>
+
+    <div id="statusText"></div>
+
+    <label style="display:block; margin-top: 12px; font-size: 0.85rem;">
+      <input type="checkbox" id="skipPairCheckbox">
+      Skip this pair in practice
+    </label>
+
+    <button class="btn" id="clearPairBtn" style="margin-top: 12px;">Clear stats for this pair</button>
+  </div>
+</main>
+
+<audio id="audio"></audio>
+
+<script>
+  // ============================================
+  // DATA
+  // ============================================
+  const groups = [
+    {
+      label: "/ɪ/ × /iː/",
+      pairs: [
+        { a: "live", b: "leave" },
+        { a: "fit", b: "feet" },
+        { a: "bit", b: "beat" },
+        { a: "sit", b: "seat" },
+        { a: "slip", b: "sleep" },
+        { a: "pick", b: "peak" },
+        { a: "lick", b: "leak" },
+        { a: "ship", b: "sheep" },
+        { a: "grin", b: "green" },
+        { a: "fill", b: "feel" },
+        { a: "him", b: "heme" },
+        { a: "quit", b: "queet" }
+      ]
+    },
+
+    {
+      label: "/æ/ × /ɛ/",
+      pairs: [
+        { a: "man", b: "men" },
+        { a: "bad", b: "bed" },
+        { a: "sad", b: "said" },
+        { a: "pack", b: "peck" },
+        { a: "back", b: "beck" },
+        { a: "gas", b: "guess" },
+        { a: "flash", b: "flesh" },
+        { a: "mad", b: "med" },
+        { a: "jam", b: "gem" },
+        { a: "cap", b: "kept" },
+        { a: "bag", b: "beg" },
+        { a: "snack", b: "neck" }
+      ]
+    },
+
+    {
+      label: "/ʌ/ × /ɑː/",
+      pairs: [
+        { a: "luck", b: "lock" },
+        { a: "cut", b: "cot" },
+        { a: "bus", b: "boss" },
+        { a: "shut", b: "shot" },
+        { a: "much", b: "mock" },
+        { a: "cup", b: "cop" },
+        { a: "mud", b: "mod" },
+        { a: "suck", b: "sock" },
+        { a: "nut", b: "not" },
+        { a: "rub", b: "rob" },
+        { a: "hung", b: "Hong" },
+        { a: "bud", b: "bod" }
+      ]
+    },
+
+    {
+      label: "/ʊ/ × /uː/",
+      pairs: [
+        { a: "full", b: "fool" },
+        { a: "pull", b: "pool" },
+        { a: "good", b: "gooed" },
+        { a: "foot", b: "food" },
+        { a: "book", b: "Luke" },
+        { a: "look", b: "Luke" },
+        { a: "cook", b: "kook" },
+        { a: "push", b: "poosh" },
+        { a: "soot", b: "suit" },
+        { a: "shook", b: "shoo" },
+        { a: "should", b: "shooed" }
+      ]
+    },
+
+    {
+      label: "/θ/ × /t/",
+      pairs: [
+        { a: "thin", b: "tin" },
+        { a: "thick", b: "tick" },
+        { a: "think", b: "tink" },
+        { a: "thought", b: "taught" },
+        { a: "thief", b: "teeth" },
+        { a: "thaw", b: "taw" },
+        { a: "thigh", b: "tie" },
+        { a: "thank", b: "tank" },
+        { a: "theme", b: "team" },
+        { a: "thread", b: "tread" },
+        { a: "three", b: "tree" },
+        { a: "threw", b: "true" }
+      ]
+    },
+
+    {
+      label: "/ð/ × /d/",
+      pairs: [
+        { a: "these", b: "dees" },
+        { a: "then", b: "den" },
+        { a: "they", b: "day" },
+        { a: "those", b: "doze" },
+        { a: "though", b: "dough" },
+        { a: "this", b: "diss" },
+        { a: "that", b: "dat" },
+        { a: "them", b: "dem" },
+        { a: "there", b: "dare" },
+        { a: "their", b: "dare" },
+        { a: "other", b: "udder" },
+        { a: "mother", b: "mutter" }
+      ]
+    },
+
+    {
+      label: "/tʃ/ × /ʃ/",
+      pairs: [
+        { a: "cheap", b: "sheep" },
+        { a: "chip", b: "ship" },
+        { a: "chin", b: "shin" },
+        { a: "chew", b: "shoe" },
+        { a: "chalk", b: "shock" },
+        { a: "chat", b: "shat" },
+        { a: "check", b: "sheck" },
+        { a: "choke", b: "shook" },
+        { a: "churn", b: "shun" },
+        { a: "chair", b: "share" },
+        { a: "chore", b: "shore" },
+        { a: "choice", b: "Joyce" }
+      ]
+    },
+
+    {
+      label: "/s/ × /z/",
+      pairs: [
+        { a: "bus", b: "buzz" },
+        { a: "ice", b: "eyes" },
+        { a: "loose", b: "lose" },
+        { a: "face", b: "phase" },
+        { a: "peace", b: "peas" },
+        { a: "rice", b: "rise" },
+        { a: "hiss", b: "his" },
+        { a: "class", b: "Claus" }
+      ]
+    },
+
+    {
+      label: "/b/–/p/, /d/–/t/, /g/–/k/",
+      pairs: [
+        { a: "cub", b: "cup" },
+        { a: "rib", b: "rip" },
+        { a: "cab", b: "cap" },
+        { a: "bad", b: "bat" },
+        { a: "pad", b: "pat" },
+        { a: "seed", b: "seat" },
+        { a: "code", b: "coat" },
+        { a: "load", b: "lowed" },
+        { a: "dog", b: "dock" },
+        { a: "tag", b: "tack" },
+        { a: "bag", b: "back" },
+        { a: "bug", b: "buck" }
+      ]
+    }
+  ];
+
+  let VARIANT_COUNT = 1;
+
+  function randomSuffix() {
+    return "_" + (Math.floor(Math.random() * VARIANT_COUNT) + 1);
+  }
+
+  function getToday() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
+  }
+
+  function loadStatsMap() {
+    try {
+      const raw = localStorage.getItem("mp_stats");
+      if (!raw) return {};
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
+  }
+
+  function saveStatsMap(map) {
+    try {
+      localStorage.setItem("mp_stats", JSON.stringify(map));
+    } catch {
+      // ignore
+    }
+  }
+
+  function formatPct(correct, attempts) {
+    if (!attempts) return "0%";
+    return Math.round((correct * 100) / attempts) + "%";
+  }
+
+  // ============================================
+  // PREFS (HIDDEN / SKIPPED PAIRS)
+  // ============================================
+  function loadPrefsMap() {
+    try {
+      const raw = localStorage.getItem("mp_prefs");
+      if (!raw) return {};
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
+  }
+
+  function savePrefsMap(map) {
+    try {
+      localStorage.setItem("mp_prefs", JSON.stringify(map));
+    } catch {
+      // ignore
+    }
+  }
+
+  function isPairHidden(g, p) {
+    const prefs = loadPrefsMap();
+    const key = "group" + g + "_pair" + p;
+    return prefs[key] && prefs[key].hidden === true;
+  }
+
+  function setPairHidden(g, p, hidden) {
+    const prefs = loadPrefsMap();
+    const key = "group" + g + "_pair" + p;
+    if (!prefs[key]) {
+      prefs[key] = {};
+    }
+    prefs[key].hidden = hidden;
+    savePrefsMap(prefs);
+  }
+
+  // ============================================
+  // STATE
+  // ============================================
+  let gIndex = 0;
+  let pIndex = 0;
+  let lastPlayedWord = null;
+  let lastPlayedFile = null;
+
+  const variantSelector = document.getElementById("variantSelector");
+  const sidebar = document.getElementById("sidebar-content");
+  const ipaLabel = document.getElementById("ipaLabel");
+  const pairLabel = document.getElementById("pairLabel");
+
+  const playBtn = document.getElementById("playBtn");
+  const sortBtn = document.getElementById("sortBtn");
+  const nextBtn = document.getElementById("nextBtn");
+
+  const revealTitle = document.getElementById("revealTitle");
+  const revealValue = document.getElementById("revealValue");
+  const statusText = document.getElementById("statusText");
+  const audio = document.getElementById("audio");
+
+  const clearPairBtn = document.getElementById("clearPairBtn");
+  const clearAllBtn = document.getElementById("clearAllBtn");
+  const skipPairCheckbox = document.getElementById("skipPairCheckbox");
+
+  // ============================================
+  // SIDEBAR
+  // ============================================
+  function renderSidebar() {
+    sidebar.innerHTML = "";
+
+    groups.forEach((group, gi) => {
+      const title = document.createElement("div");
+      title.className = "group-title";
+      title.textContent = group.label;
+      sidebar.appendChild(title);
+
+      group.pairs.forEach((pair, pi) => {
+        const btn = document.createElement("button");
+        btn.className = "pair-button";
+        btn.dataset.g = gi;
+        btn.dataset.p = pi;
+        btn.textContent = pair.a + " × " + pair.b;
+
+        // mark as skipped if needed (on initial render)
+        if (isPairHidden(gi, pi)) {
+          btn.classList.add("skipped");
+        }
+
+        btn.addEventListener("click", () => {
+          gIndex = gi;
+          pIndex = pi;
+          lastPlayedWord = null;
+          lastPlayedFile = null;
+          updateUI();
+        });
+
+        sidebar.appendChild(btn);
+      });
+    });
+  }
+
+  function updateSidebarActive() {
+    document.querySelectorAll(".pair-button").forEach(btn => {
+      const gi = Number(btn.dataset.g);
+      const pi = Number(btn.dataset.p);
+
+      // only handle active highlight here
+      btn.classList.toggle(
+        "active",
+        gi === gIndex && pi === pIndex
+      );
+    });
+  }
+
+  // ============================================
+  // STATS DISPLAY FOR CURRENT PAIR
+  // ============================================
+  function updateStatsDisplay() {
+    const statsKey = "group" + gIndex + "_pair" + pIndex;
+    const statsMap = loadStatsMap();
+    const list = statsMap[statsKey] || [];
+    const today = getToday();
+
+    let todayAttempts = 0;
+    let todayCorrect = 0;
+    let totalAttempts = 0;
+    let totalCorrect = 0;
+
+    for (const entry of list) {
+      const day = entry.day;
+      const data = entry.data;
+      totalAttempts += data.attempts;
+      totalCorrect += data.correct;
+      if (day === today) {
+        todayAttempts = data.attempts;
+        todayCorrect = data.correct;
+      }
+    }
+
+    if (totalAttempts === 0) {
+      statusText.textContent = "No stats yet for this pair.";
+    } else {
+      const todayStr = todayCorrect + "/" + todayAttempts + " (" + formatPct(todayCorrect, todayAttempts) + ")";
+      const totalStr = totalCorrect + "/" + totalAttempts + " (" + formatPct(totalCorrect, totalAttempts) + ")";
+      statusText.textContent = "Stats for this pair – Today: " + todayStr + " | All time: " + totalStr;
+    }
+  }
+
+  // ============================================
+  // CLEAR STATS
+  // ============================================
+  function clearStatsForCurrentPair() {
+    const statsKey = "group" + gIndex + "_pair" + pIndex;
+    const statsMap = loadStatsMap();
+    if (statsMap.hasOwnProperty(statsKey)) {
+      delete statsMap[statsKey];
+      saveStatsMap(statsMap);
+    }
+    updateStatsDisplay();
+  }
+
+  function clearAllStats() {
+    localStorage.removeItem("mp_stats");
+    updateStatsDisplay();
+  }
+
+  // ============================================
+  // UI
+  // ============================================
+  function makeVariantButtons(baseWord) {
+    let html = "";
+    for (let i = 1; i <= VARIANT_COUNT; i++) {
+      html += '<span class="variant-btn" data-word="' +
+              baseWord +
+              '" data-n="' +
+              i +
+              '">' +
+              i +
+              "</span>";
+    }
+    return html;
+  }
+
+  function updateUI() {
+    const group = groups[gIndex];
+    const pair = group.pairs[pIndex];
+
+    ipaLabel.textContent = group.label;
+
+    pairLabel.innerHTML =
+      pair.a +
+      " " +
+      makeVariantButtons(pair.a) +
+      " &nbsp; × &nbsp; " +
+      pair.b +
+      " " +
+      makeVariantButtons(pair.b);
+
+    revealValue.innerHTML =
+      '<span id="optA" class="word-option" data-word="' +
+      pair.a +
+      '">' +
+      pair.a +
+      "</span>" +
+      '&nbsp;&nbsp; or &nbsp;&nbsp;' +
+      '<span id="optB" class="word-option" data-word="' +
+      pair.b +
+      '">' +
+      pair.b +
+      "</span>";
+
+    updateSidebarActive();
+    clearWordColors();
+    updateStatsDisplay();
+
+    // sync "Skip this pair" checkbox
+    skipPairCheckbox.checked = isPairHidden(gIndex, pIndex);
+  }
+
+  function clearWordColors() {
+    const optA = document.getElementById("optA");
+    const optB = document.getElementById("optB");
+    if (!optA || !optB) return;
+    optA.classList.remove("word-correct", "word-wrong");
+    optB.classList.remove("word-correct", "word-wrong");
+  }
+
+  // ============================================
+  // AUDIO + GAME LOGIC
+  // ============================================
+  function playVariant(baseWord, n) {
+    clearWordColors();
+    const file = baseWord + "_" + n;
+    lastPlayedWord = baseWord;
+    lastPlayedFile = file;
+    audio.src = "audios/" + file + ".wav";
+    audio.play();
+  }
+
+  function playWordA() {
+    clearWordColors();
+    const pair = groups[gIndex].pairs[pIndex];
+    const baseWord = pair.a;
+
+    if (!lastPlayedFile || lastPlayedWord !== baseWord) {
+      lastPlayedFile = baseWord + randomSuffix();
+      lastPlayedWord = baseWord;
+    }
+
+    audio.src = "audios/" + lastPlayedFile + ".wav";
+    audio.play();
+  }
+
+  function sortWord() {
+    clearWordColors();
+    const pair = groups[gIndex].pairs[pIndex];
+    const base = Math.random() < 0.5 ? pair.a : pair.b;
+    lastPlayedWord = base;
+    lastPlayedFile = base + randomSuffix();
+    audio.src = "audios/" + lastPlayedFile + ".wav";
+    audio.play();
+  }
+
+  function recordAttempt(isCorrect) {
+    const statsKey = "group" + gIndex + "_pair" + pIndex;
+    const today = getToday();
+
+    const statsMap = loadStatsMap();
+    const list = statsMap[statsKey] || [];
+
+    let entry = list.find(e => e.day === today);
+    if (!entry) {
+      entry = { day: today, data: { attempts: 0, correct: 0 } };
+      list.push(entry);
+    }
+
+    entry.data.attempts += 1;
+    if (isCorrect) {
+      entry.data.correct += 1;
+    }
+
+    statsMap[statsKey] = list;
+    saveStatsMap(statsMap);
+
+    updateStatsDisplay();  // refresh stats after each guess
+  }
+
+  function handleWordGuess(clickedWord) {
+    if (!lastPlayedWord) return;
+
+    clearWordColors();
+
+    const optA = document.getElementById("optA");
+    const optB = document.getElementById("optB");
+
+    const isCorrect = (clickedWord === lastPlayedWord);
+
+    if (isCorrect) {
+      if (optA.dataset.word === clickedWord) optA.classList.add("word-correct");
+      if (optB.dataset.word === clickedWord) optB.classList.add("word-correct");
+    } else {
+      if (optA.dataset.word === clickedWord) optA.classList.add("word-wrong");
+      if (optB.dataset.word === clickedWord) optB.classList.add("word-wrong");
+    }
+
+    recordAttempt(isCorrect);
+  }
+
+  function nextPair() {
+    const group = groups[gIndex];
+    const total = group.pairs.length;
+
+    let attempts = 0;
+    do {
+      pIndex = (pIndex + 1) % total;
+      attempts++;
+      if (attempts > total) {
+        // all pairs in this group are hidden
+        break;
+      }
+    } while (isPairHidden(gIndex, pIndex));
+
+    lastPlayedWord = null;
+    lastPlayedFile = null;
+    updateUI();
+  }
+
+  // ============================================
+  // EVENTS
+  // ============================================
+  variantSelector.addEventListener("change", () => {
+    VARIANT_COUNT = Number(variantSelector.value);
+    lastPlayedWord = null;
+    lastPlayedFile = null;
+    updateUI();
+  });
+
+  playBtn.addEventListener("click", playWordA);
+  sortBtn.addEventListener("click", sortWord);
+  nextBtn.addEventListener("click", nextPair);
+
+  clearPairBtn.addEventListener("click", clearStatsForCurrentPair);
+  clearAllBtn.addEventListener("click", clearAllStats);
+
+  skipPairCheckbox.addEventListener("change", () => {
+    setPairHidden(gIndex, pIndex, skipPairCheckbox.checked);
+
+    // update only the active button's "skipped" state
+    const activeBtn = document.querySelector(".pair-button.active");
+    if (activeBtn) {
+      activeBtn.classList.toggle("skipped", skipPairCheckbox.checked);
+    }
+  });
+
+  document.addEventListener("click", (e) => {
+    if (e.target.classList.contains("variant-btn")) {
+      playVariant(e.target.dataset.word, e.target.dataset.n);
+      return;
+    }
+
+    if (e.target.classList.contains("word-option")) {
+      handleWordGuess(e.target.dataset.word);
+    }
+  });
+
+  // ============================================
+  // INIT
+  // ============================================
+  renderSidebar();
+  updateUI();
+</script>
+
+</body>
+</html>
