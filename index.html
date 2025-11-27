@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <title>Minimal Pair Listening Game</title>
+  <!-- Responsive viewport -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
       font-family: system-ui, sans-serif;
-      height: 100vh;
+      height: 100vh;          /* VOLTA a ser fixo no desktop */
       display: flex;
       background: #f5f5f5;
     }
@@ -75,6 +78,7 @@
       border-radius: 16px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       width: 480px;
+      max-width: 100%;
     }
 
     #ipaLabel {
@@ -159,6 +163,53 @@
 
     .word-correct { color: #16a34a !important; font-weight: 700; }
     .word-wrong   { color: #dc2626 !important; font-weight: 700; }
+
+    /* ===========================
+       RESPONSIVE (mobile)
+       =========================== */
+    @media (max-width: 768px) {
+      body {
+        height: auto;          /* no mobile pode passar de 100vh */
+        min-height: 100vh;
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 3px solid #4f46e5;
+        max-height: 40vh;
+      }
+
+      .sidebar h1 {
+        text-align: center;
+      }
+
+      .main {
+        padding: 16px;
+        align-items: stretch;
+      }
+
+      .card {
+        width: 100%;
+        max-width: 100%;
+        padding: 16px;
+      }
+
+      .btn {
+        width: 100%;
+        text-align: center;
+        margin-right: 0;
+      }
+
+      .word-option {
+        font-size: 1.6rem;
+      }
+
+      #statusText {
+        font-size: 0.8rem;
+      }
+    }
   </style>
 </head>
 
