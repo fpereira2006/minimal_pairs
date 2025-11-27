@@ -91,8 +91,8 @@
     }
 
     #ipaLabel {
-      font-size: 1.3rem;      /* a bit bigger */
-      font-weight: 600;       /* more prominent */
+      font-size: 1.3rem;      /* bigger group label */
+      font-weight: 600;
       color: #6b7280;
       margin-bottom: 4px;
     }
@@ -153,6 +153,20 @@
       font-size: 1.1rem;
       font-weight: 500;
       color: #4b5563;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 24px;
+    }
+
+    .word-col {
+      text-align: center;
+    }
+
+    .word-ipa {
+      font-size: 0.9rem;
+      color: #6b7280;
+      margin-top: 4px;
     }
 
     #statusText {
@@ -182,8 +196,6 @@
         height: 100dvh;
         min-height: 100dvh;
         flex-direction: column;
-        /* allows global scroll for pull-to-refresh,
-           but content still fits on screen */
         overflow-y: auto;
       }
 
@@ -203,7 +215,6 @@
         cursor: pointer;
       }
 
-      /* backdrop behind the sidebar when open */
       .menu-backdrop {
         display: none;
         position: fixed;
@@ -239,7 +250,6 @@
       }
 
       .main {
-        /* space for the fixed button + some breathing room */
         padding: 64px 16px 16px;
         align-items: stretch;
         flex: 0 0 auto;
@@ -250,9 +260,8 @@
         width: 100%;
         max-width: 100%;
         padding: 16px;
-        /* make sure it fits inside viewport without pushing down */
         max-height: calc(100dvh - 80px);
-        overflow: auto; /* if it overflows, only inner content scrolls */
+        overflow: auto;
       }
 
       .btn {
@@ -269,7 +278,6 @@
         font-size: 0.8rem;
       }
 
-      /* HIDE desktop-only elements on mobile */
       .desktop-only {
         display: none !important;
       }
@@ -279,9 +287,7 @@
 
 <body>
 
-<!-- Mobile menu button -->
 <button class="menu-toggle" id="toggleMenuBtn">☰ Pairs</button>
-<!-- Backdrop for mobile menu -->
 <div class="menu-backdrop" id="menuBackdrop"></div>
 
 <aside class="sidebar">
@@ -307,8 +313,6 @@
     <div id="pairLabel"></div>
 
     <button class="btn" id="playBtn">▶ Play (A)</button>
-    <!-- Sort button removed -->
-    <!-- Next pair only on desktop -->
     <button class="btn desktop-only" id="nextBtn">Next Pair ➜</button>
 
     <div class="hidden-word-card" id="revealCard">
@@ -351,7 +355,6 @@
         { a: "quit", b: "queet" }
       ]
     },
-
     {
       label: "/æ/ × /ɛ/",
       pairs: [
@@ -369,7 +372,6 @@
         { a: "snack", b: "neck" }
       ]
     },
-
     {
       label: "/ʌ/ × /ɑː/",
       pairs: [
@@ -387,7 +389,6 @@
         { a: "bud",  b: "bod"  }
       ]
     },
-
     {
       label: "/ʊ/ × /uː/",
       pairs: [
@@ -404,7 +405,6 @@
         { a: "should", b: "shooed"}
       ]
     },
-
     {
       label: "/θ/ × /t/",
       pairs: [
@@ -422,7 +422,6 @@
         { a: "threw",  b: "true"  }
       ]
     },
-
     {
       label: "/ð/ × /d/",
       pairs: [
@@ -440,7 +439,6 @@
         { a: "mother", b: "mutter"}
       ]
     },
-
     {
       label: "/tʃ/ × /ʃ/",
       pairs: [
@@ -458,7 +456,6 @@
         { a: "choice",b: "Joyce" }
       ]
     },
-
     {
       label: "/s/ × /z/",
       pairs: [
@@ -472,7 +469,6 @@
         { a: "class", b: "Claus"}
       ]
     },
-
     {
       label: "/b/–/p/, /d/–/t/, /g/–/k/",
       pairs: [
@@ -491,6 +487,217 @@
       ]
     }
   ];
+
+  // IPA map (General American; non-words are phonetic guesses).
+  const ipaMap = {
+    live: "/lɪv/",
+    leave: "/liːv/",
+    fit: "/fɪt/",
+    feet: "/fiːt/",
+    bit: "/bɪt/",
+    beat: "/biːt/",
+    sit: "/sɪt/",
+    seat: "/siːt/",
+    slip: "/slɪp/",
+    sleep: "/sliːp/",
+    pick: "/pɪk/",
+    peak: "/piːk/",
+    lick: "/lɪk/",
+    leak: "/liːk/",
+    ship: "/ʃɪp/",
+    sheep: "/ʃiːp/",
+    grin: "/ɡrɪn/",
+    green: "/ɡriːn/",
+    fill: "/fɪl/",
+    feel: "/fiːl/",
+    him: "/hɪm/",
+    heme: "/hiːm/",
+    quit: "/kwɪt/",
+    queet: "/kwiːt/",
+
+    man: "/mæn/",
+    men: "/mɛn/",
+    bad: "/bæd/",
+    bed: "/bɛd/",
+    sad: "/sæd/",
+    said: "/sɛd/",
+    pack: "/pæk/",
+    peck: "/pɛk/",
+    back: "/bæk/",
+    beck: "/bɛk/",
+    gas: "/ɡæs/",
+    guess: "/ɡɛs/",
+    flash: "/flæʃ/",
+    flesh: "/flɛʃ/",
+    mad: "/mæd/",
+    med: "/mɛd/",
+    jam: "/dʒæm/",
+    gem: "/dʒɛm/",
+    cap: "/kæp/",
+    kept: "/kɛpt/",
+    bag: "/bæɡ/",
+    beg: "/bɛɡ/",
+    snack: "/snæk/",
+    neck: "/nɛk/",
+
+    luck: "/lʌk/",
+    lock: "/lɑk/",
+    cut: "/kʌt/",
+    cot: "/kɑt/",
+    bus: "/bʌs/",
+    boss: "/bɔs/",
+    shut: "/ʃʌt/",
+    shot: "/ʃɑt/",
+    much: "/mʌtʃ/",
+    mock: "/mɑk/",
+    cup: "/kʌp/",
+    cop: "/kɑp/",
+    mud: "/mʌd/",
+    mod: "/mɑd/",
+    suck: "/sʌk/",
+    sock: "/sɑk/",
+    nut: "/nʌt/",
+    not: "/nɑt/",
+    rub: "/rʌb/",
+    rob: "/rɑb/",
+    hung: "/hʌŋ/",
+    Hong: "/hɑŋ/",
+    bud: "/bʌd/",
+    bod: "/bɑd/",
+
+    full: "/fʊl/",
+    fool: "/fuːl/",
+    pull: "/pʊl/",
+    pool: "/puːl/",
+    good: "/ɡʊd/",
+    gooed: "/ɡuːd/",
+    foot: "/fʊt/",
+    food: "/fuːd/",
+    book: "/bʊk/",
+    Luke: "/luːk/",
+    look: "/lʊk/",
+    cook: "/kʊk/",
+    kook: "/kuːk/",
+    push: "/pʊʃ/",
+    poosh: "/puːʃ/",
+    soot: "/sʊt/",
+    suit: "/suːt/",
+    shook: "/ʃʊk/",
+    shoo: "/ʃuː/",
+    should: "/ʃʊd/",
+    shooed: "/ʃuːd/",
+
+    thin: "/θɪn/",
+    tin: "/tɪn/",
+    thick: "/θɪk/",
+    tick: "/tɪk/",
+    think: "/θɪŋk/",
+    tink: "/tɪŋk/",
+    thought: "/θɔt/",
+    taught: "/tɔt/",
+    thief: "/θiːf/",
+    teeth: "/tiːθ/",
+    thaw: "/θɔ/",
+    taw: "/tɔ/",
+    thigh: "/θaɪ/",
+    tie: "/taɪ/",
+    thank: "/θæŋk/",
+    tank: "/tæŋk/",
+    theme: "/θiːm/",
+    team: "/tiːm/",
+    thread: "/θrɛd/",
+    tread: "/trɛd/",
+    three: "/θriː/",
+    tree: "/triː/",
+    threw: "/θruː/",
+    true: "/truː/",
+
+    these: "/ðiːz/",
+    dees: "/diːz/",
+    then: "/ðɛn/",
+    den: "/dɛn/",
+    they: "/ðeɪ/",
+    day: "/deɪ/",
+    those: "/ðoʊz/",
+    doze: "/doʊz/",
+    though: "/ðoʊ/",
+    dough: "/doʊ/",
+    this: "/ðɪs/",
+    diss: "/dɪs/",
+    that: "/ðæt/",
+    dat: "/dæt/",
+    them: "/ðɛm/",
+    dem: "/dɛm/",
+    there: "/ðɛr/",
+    dare: "/dɛr/",
+    their: "/ðɛr/",
+    other: "/ˈʌðər/",
+    udder: "/ˈʌdər/",
+    mother: "/ˈmʌðər/",
+    mutter: "/ˈmʌtər/",
+
+    cheap: "/tʃiːp/",
+    sheep: "/ʃiːp/",
+    chip: "/tʃɪp/",
+    ship: "/ʃɪp/",
+    chin: "/tʃɪn/",
+    shin: "/ʃɪn/",
+    chew: "/tʃuː/",
+    shoe: "/ʃuː/",
+    chalk: "/tʃɔk/",
+    shock: "/ʃɑk/",
+    chat: "/tʃæt/",
+    shat: "/ʃæt/",
+    check: "/tʃɛk/",
+    sheck: "/ʃɛk/",
+    choke: "/tʃoʊk/",
+    churn: "/tʃɝn/",
+    shun: "/ʃʌn/",
+    chair: "/tʃɛr/",
+    share: "/ʃɛr/",
+    chore: "/tʃɔr/",
+    shore: "/ʃɔr/",
+    choice: "/tʃɔɪs/",
+    Joyce: "/dʒɔɪs/",
+
+    bus: "/bʌs/",
+    buzz: "/bʌz/",
+    ice: "/aɪs/",
+    eyes: "/aɪz/",
+    loose: "/luːs/",
+    lose: "/luːz/",
+    face: "/feɪs/",
+    phase: "/feɪz/",
+    peace: "/piːs/",
+    peas: "/piːz/",
+    rice: "/raɪs/",
+    rise: "/raɪz/",
+    hiss: "/hɪs/",
+    his: "/hɪz/",
+    class: "/klæs/",
+    Claus: "/klɔːz/",
+
+    cub: "/kʌb/",
+    cup: "/kʌp/",
+    rib: "/rɪb/",
+    rip: "/rɪp/",
+    cab: "/kæb/",
+    cap: "/kæp/",
+    bat: "/bæt/",
+    pad: "/pæd/",
+    pat: "/pæt/",
+    seed: "/siːd/",
+    code: "/koʊd/",
+    coat: "/koʊt/",
+    load: "/loʊd/",
+    lowed: "/loʊd/",
+    dog: "/dɔɡ/",
+    dock: "/dɑk/",
+    tag: "/tæɡ/",
+    tack: "/tæk/",
+    bug: "/bʌɡ/",
+    buck: "/bʌk/"
+  };
 
   let VARIANT_COUNT = 1;
 
@@ -529,9 +736,7 @@
     return Math.round((correct * 100) / attempts) + "%";
   }
 
-  // ============================================
   // PREFS (HIDDEN / SKIPPED PAIRS)
-  // ============================================
   function loadPrefsMap() {
     try {
       const raw = localStorage.getItem("mp_prefs");
@@ -566,14 +771,11 @@
     savePrefsMap(prefs);
   }
 
-  // helper: total number of pairs in all groups
   function getTotalPairsCount() {
     return groups.reduce((sum, g) => sum + g.pairs.length, 0);
   }
 
-  // ============================================
   // STATE
-  // ============================================
   let gIndex = 0;
   let pIndex = 0;
   let lastPlayedWord = null;
@@ -587,7 +789,6 @@
   const playBtn = document.getElementById("playBtn");
   const nextBtn = document.getElementById("nextBtn");
 
-  const revealTitle = document.getElementById("revealTitle");
   const revealValue = document.getElementById("revealValue");
   const statusText = document.getElementById("statusText");
   const audio = document.getElementById("audio");
@@ -600,9 +801,7 @@
   const menuBackdrop = document.getElementById("menuBackdrop");
   const card = document.getElementById("card");
 
-  // ============================================
   // SIDEBAR
-  // ============================================
   function renderSidebar() {
     sidebar.innerHTML = "";
 
@@ -619,7 +818,6 @@
         btn.dataset.p = pi;
         btn.textContent = pair.a + " × " + pair.b;
 
-        // mark as skipped if needed (on initial render)
         if (isPairHidden(gi, pi)) {
           btn.classList.add("skipped");
         }
@@ -631,7 +829,6 @@
           lastPlayedFile = null;
           updateUI();
 
-          // on mobile, close the menu and backdrop after selecting a pair
           if (window.innerWidth <= 768) {
             sidebarElement.classList.remove("open");
             menuBackdrop.classList.remove("open");
@@ -647,17 +844,11 @@
     document.querySelectorAll(".pair-button").forEach(btn => {
       const gi = Number(btn.dataset.g);
       const pi = Number(btn.dataset.p);
-
-      btn.classList.toggle(
-        "active",
-        gi === gIndex && pi === pIndex
-      );
+      btn.classList.toggle("active", gi === gIndex && pi === pIndex);
     });
   }
 
-  // ============================================
-  // STATS DISPLAY FOR CURRENT PAIR
-  // ============================================
+  // STATS
   function updateStatsDisplay() {
     const statsKey = "group" + gIndex + "_pair" + pIndex;
     const statsMap = loadStatsMap();
@@ -692,9 +883,6 @@
     }
   }
 
-  // ============================================
-  // CLEAR STATS
-  // ============================================
   function clearStatsForCurrentPair() {
     const statsKey = "group" + gIndex + "_pair" + pIndex;
     const statsMap = loadStatsMap();
@@ -710,9 +898,7 @@
     updateStatsDisplay();
   }
 
-  // ============================================
   // UI
-  // ============================================
   function makeVariantButtons(baseWord) {
     let html = "";
     for (let i = 1; i <= VARIANT_COUNT; i++) {
@@ -734,32 +920,31 @@
     ipaLabel.textContent = group.label;
 
     pairLabel.innerHTML =
-      pair.a +
-      " " +
-      makeVariantButtons(pair.a) +
+      pair.a + " " + makeVariantButtons(pair.a) +
       " &nbsp; × &nbsp; " +
-      pair.b +
-      " " +
-      makeVariantButtons(pair.b);
+      pair.b + " " + makeVariantButtons(pair.b);
+
+    const leftIpa  = ipaMap[pair.a] || "";
+    const rightIpa = ipaMap[pair.b] || "";
 
     revealValue.innerHTML =
-      '<span id="optA" class="word-option" data-word="' +
-      pair.a +
-      '">' +
-      pair.a +
-      "</span>" +
-      '&nbsp;&nbsp; or &nbsp;&nbsp;' +
-      '<span id="optB" class="word-option" data-word="' +
-      pair.b +
-      '">' +
-      pair.b +
-      "</span>";
+      '<div class="word-col">' +
+        '<span id="optA" class="word-option" data-word="' + pair.a + '">' +
+          pair.a +
+        '</span>' +
+        '<div class="word-ipa">' + leftIpa + '</div>' +
+      '</div>' +
+      '<div style="align-self:center; padding: 0 8px;">or</div>' +
+      '<div class="word-col">' +
+        '<span id="optB" class="word-option" data-word="' + pair.b + '">' +
+          pair.b +
+        '</span>' +
+        '<div class="word-ipa">' + rightIpa + '</div>' +
+      '</div>';
 
     updateSidebarActive();
     clearWordColors();
     updateStatsDisplay();
-
-    // sync "Skip this pair" checkbox
     skipPairCheckbox.checked = isPairHidden(gIndex, pIndex);
   }
 
@@ -771,9 +956,7 @@
     optB.classList.remove("word-correct", "word-wrong");
   }
 
-  // ============================================
   // AUDIO + GAME LOGIC
-  // ============================================
   function playVariant(baseWord, n) {
     clearWordColors();
     const file = baseWord + "_" + n;
@@ -827,8 +1010,7 @@
 
     statsMap[statsKey] = list;
     saveStatsMap(statsMap);
-
-    updateStatsDisplay();  // refresh stats after each guess
+    updateStatsDisplay();
   }
 
   function handleWordGuess(clickedWord) {
@@ -851,17 +1033,11 @@
 
     recordAttempt(isCorrect);
 
-    // After 1 second, behave exactly like the old Sort button
+    // After 1 second, behave like the old Sort button
     setTimeout(sortWord, 1000);
   }
 
-  // ============================================
-  // GLOBAL NEXT/PREVIOUS (ACROSS ALL GROUPS)
-  // ============================================
-  function getTotalPairsCount() {
-    return groups.reduce((sum, g) => sum + g.pairs.length, 0);
-  }
-
+  // NEXT/PREV ACROSS ALL GROUPS
   function nextPair() {
     const totalPairs = getTotalPairsCount();
     let attempts = 0;
@@ -873,10 +1049,7 @@
         gIndex = (gIndex + 1) % groups.length;
       }
       attempts++;
-      if (attempts > totalPairs) {
-        // all pairs are hidden
-        break;
-      }
+      if (attempts > totalPairs) break;
     } while (isPairHidden(gIndex, pIndex));
 
     lastPlayedWord = null;
@@ -895,10 +1068,7 @@
         pIndex = groups[gIndex].pairs.length - 1;
       }
       attempts++;
-      if (attempts > totalPairs) {
-        // all pairs are hidden
-        break;
-      }
+      if (attempts > totalPairs) break;
     } while (isPairHidden(gIndex, pIndex));
 
     lastPlayedWord = null;
@@ -906,9 +1076,7 @@
     updateUI();
   }
 
-  // ============================================
-  // SELECT FIRST NON-HIDDEN PAIR ON LOAD
-  // ============================================
+  // FIRST NON-HIDDEN ON LOAD
   function selectFirstVisiblePair() {
     const totalPairs = getTotalPairsCount();
     let checked = 0;
@@ -925,15 +1093,12 @@
         if (checked >= totalPairs) break;
       }
     }
-    // fallback: if somehow all are hidden, just use default (0,0)
     gIndex = 0;
     pIndex = 0;
     updateUI();
   }
 
-  // ============================================
   // EVENTS
-  // ============================================
   variantSelector.addEventListener("change", () => {
     VARIANT_COUNT = Number(variantSelector.value);
     lastPlayedWord = null;
@@ -949,15 +1114,12 @@
 
   skipPairCheckbox.addEventListener("change", () => {
     setPairHidden(gIndex, pIndex, skipPairCheckbox.checked);
-
-    // update only the active button's "skipped" state
     const activeBtn = document.querySelector(".pair-button.active");
     if (activeBtn) {
       activeBtn.classList.toggle("skipped", skipPairCheckbox.checked);
     }
   });
 
-  // toggle sidebar on mobile
   toggleMenuBtn.addEventListener("click", () => {
     const willOpen = !sidebarElement.classList.contains("open");
     sidebarElement.classList.toggle("open", willOpen);
@@ -966,7 +1128,6 @@
     }
   });
 
-  // click on backdrop closes sidebar (mobile)
   menuBackdrop.addEventListener("click", () => {
     sidebarElement.classList.remove("open");
     menuBackdrop.classList.remove("open");
@@ -983,9 +1144,7 @@
     }
   });
 
-  // ============================================
-  // SWIPE GESTURE ON CARD (LEFT/RIGHT) WITH ANIMATION
-  // ============================================
+  // SWIPE
   let touchStartX = null;
   let touchStartY = null;
   let isDragging = false;
@@ -997,24 +1156,17 @@
   }
 
   function animateToNewPair(direction, changePairFn) {
-    // slide card out in swipe direction
     const screenWidth = window.innerWidth || 400;
     card.style.transition = "transform 0.25s ease, opacity 0.25s ease";
     card.style.transform = "translateX(" + (direction * screenWidth) + "px)";
     card.style.opacity = "0";
 
     setTimeout(() => {
-      // change pair
       changePairFn();
-
-      // bring card from opposite side
       card.style.transition = "none";
       card.style.transform = "translateX(" + (-direction * screenWidth) + "px)";
       card.style.opacity = "0";
-
-      // force reflow
       void card.offsetWidth;
-
       card.style.transition = "transform 0.25s ease, opacity 0.25s ease";
       card.style.transform = "translateX(0)";
       card.style.opacity = "1";
@@ -1026,8 +1178,6 @@
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
     isDragging = true;
-
-    // disable transition while dragging
     card.style.transition = "none";
   });
 
@@ -1042,15 +1192,11 @@
     const absDx = Math.abs(dx);
     const absDy = Math.abs(dy);
 
-    // Only react strongly to mostly horizontal moves
     if (absDx > absDy) {
-      // small follow effect + a bit of opacity change
       const translateX = dx * 0.3;
       const opacityDrop = Math.min(0.4, absDx / 400);
       card.style.transform = "translateX(" + translateX + "px)";
       card.style.opacity = (1 - opacityDrop).toString();
-
-      // optionally, prevent vertical scroll when clearly swiping horizontally
       e.preventDefault();
     }
   }, { passive: false });
@@ -1072,22 +1218,18 @@
 
     const absDx = Math.abs(dx);
     const absDy = Math.abs(dy);
-    const SWIPE_THRESHOLD = 50; // px
+    const SWIPE_THRESHOLD = 50;
 
     touchStartX = null;
     touchStartY = null;
 
-    // Only treat mostly horizontal, long enough swipe
     if (absDx > absDy && absDx > SWIPE_THRESHOLD) {
       if (dx < 0) {
-        // swipe left -> next pair with animation
         animateToNewPair(-1, nextPair);
       } else {
-        // swipe right -> previous pair with animation
         animateToNewPair(1, previousPair);
       }
     } else {
-      // not enough swipe: snap back
       resetCardPosition();
     }
   });
@@ -1099,9 +1241,7 @@
     resetCardPosition();
   });
 
-  // ============================================
   // INIT
-  // ============================================
   renderSidebar();
   selectFirstVisiblePair();
 </script>
