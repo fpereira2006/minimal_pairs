@@ -282,8 +282,7 @@
 </aside>
 
 <main class="main">
-  <div class="card">
-
+  <div class="card" id="card">
     <div id="ipaLabel"></div>
 
     <div id="variantSelectorBox">
@@ -585,6 +584,7 @@
   const toggleMenuBtn = document.getElementById("toggleMenuBtn");
   const sidebarElement = document.querySelector(".sidebar");
   const menuBackdrop = document.getElementById("menuBackdrop");
+  const card = document.getElementById("card");
 
   // ============================================
   // SIDEBAR
@@ -857,6 +857,26 @@
     updateUI();
   }
 
+  // NEW: go to previous pair (respecting hidden ones)
+  function previousPair() {
+    const group = groups[gIndex];
+    const total = group.pairs.length;
+
+    let attempts = 0;
+    do {
+      pIndex = (pIndex - 1 + total) % total;
+      attempts++;
+      if (attempts > total) {
+        // all pairs in this group are hidden
+        break;
+      }
+    } while (isPairHidden(gIndex, pIndex));
+
+    lastPlayedWord = null;
+    lastPlayedFile = null;
+    updateUI();
+  }
+
   // ============================================
   // EVENTS
   // ============================================
@@ -908,6 +928,46 @@
     if (e.target.classList.contains("word-option")) {
       handleWordGuess(e.target.dataset.word);
     }
+  });
+
+  // ============================================
+  // SWIPE GESTURE ON CARD (LEFT/RIGHT)
+  // ============================================
+  let touchStartX = null;
+  let touchStartY = null;
+
+  card.addEventListener("touchstart", (e) => {
+    if (e.touches.length !== 1) return;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  });
+
+  card.addEventListener("touchend", (e) => {
+    if (touchStartX === null || touchStartY === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+
+    const dx = touchEndX - touchStartX;
+    const dy = touchEndY - touchStartY;
+
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+
+    const SWIPE_THRESHOLD = 50; // px
+
+    // Only treat mostly horizontal, long enough swipe
+    if (absDx > absDy && absDx > SWIPE_THRESHOLD) {
+      if (dx < 0) {
+        // swipe left -> next pair
+        nextPair();
+      } else {
+        // swipe right -> previous pair
+        previousPair();
+      }
+    }
+
+    touchStartX = null;
+    touchStartY = null;
   });
 
   // ============================================
