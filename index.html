@@ -267,6 +267,11 @@
       #statusText {
         font-size: 0.8rem;
       }
+
+      /* HIDE desktop-only elements on mobile */
+      .desktop-only {
+        display: none !important;
+      }
     }
   </style>
 </head>
@@ -302,7 +307,8 @@
 
     <button class="btn" id="playBtn">▶ Play (A)</button>
     <button class="btn" id="sortBtn">🔀 Sort (A or B)</button>
-    <button class="btn" id="nextBtn">Next Pair ➜</button>
+    <!-- Next pair only on desktop -->
+    <button class="btn desktop-only" id="nextBtn">Next Pair ➜</button>
 
     <div class="hidden-word-card" id="revealCard">
       <div id="revealTitle">Choose the word you heard</div>
