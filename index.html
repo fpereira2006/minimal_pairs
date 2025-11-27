@@ -901,6 +901,31 @@
   }
 
   // ============================================
+  // SELECT FIRST NON-HIDDEN PAIR ON LOAD
+  // ============================================
+  function selectFirstVisiblePair() {
+    const totalPairs = getTotalPairsCount();
+    let checked = 0;
+
+    for (let gi = 0; gi < groups.length; gi++) {
+      for (let pi = 0; pi < groups[gi].pairs.length; pi++) {
+        checked++;
+        if (!isPairHidden(gi, pi)) {
+          gIndex = gi;
+          pIndex = pi;
+          updateUI();
+          return;
+        }
+        if (checked >= totalPairs) break;
+      }
+    }
+    // fallback: if somehow all are hidden, just use default (0,0)
+    gIndex = 0;
+    pIndex = 0;
+    updateUI();
+  }
+
+  // ============================================
   // EVENTS
   // ============================================
   variantSelector.addEventListener("change", () => {
@@ -1073,7 +1098,7 @@
   // INIT
   // ============================================
   renderSidebar();
-  updateUI();
+  selectFirstVisiblePair();
 </script>
 
 </body>
