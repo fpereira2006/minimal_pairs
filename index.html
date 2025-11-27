@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Minimal Pair Listening Game</title>
-  <!-- Responsive viewport + disable zoom on mobile -->
+  <!-- Responsive viewport + try to limit zoom on mobile -->
   <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
@@ -175,10 +175,10 @@
        =========================== */
     @media (max-width: 768px) {
       body {
-        height: 100vh;        /* ocupa a tela inteira */
+        height: auto;         /* deixa o body crescer e rolar */
         min-height: 100vh;
         flex-direction: column;
-        overflow: hidden;     /* sem scroll global */
+        overflow-y: auto;     /* scroll global para pull-to-refresh */
       }
 
       .menu-toggle {
@@ -223,8 +223,8 @@
         padding: 16px;
         padding-top: 56px; /* espaço pro botão fixo */
         align-items: stretch;
-        flex: 1;
-        overflow-y: auto;   /* se passar da tela, só o conteúdo rola */
+        flex: 0 0 auto;    /* deixa o body controlar o scroll */
+        overflow: visible;
       }
 
       .card {
@@ -252,7 +252,7 @@
 
 <body>
 
-<!-- Botão de menu (só aparece no mobile via CSS) -->
+<!-- Mobile menu button -->
 <button class="menu-toggle" id="toggleMenuBtn">☰ Pairs</button>
 
 <aside class="sidebar">
