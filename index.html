@@ -91,7 +91,8 @@
     }
 
     #ipaLabel {
-      font-size: 0.9rem;
+      font-size: 1.3rem;      /* a bit bigger */
+      font-weight: 600;       /* more prominent */
       color: #6b7280;
       margin-bottom: 4px;
     }
@@ -565,6 +566,11 @@
     savePrefsMap(prefs);
   }
 
+  // helper: total number of pairs in all groups
+  function getTotalPairsCount() {
+    return groups.reduce((sum, g) => sum + g.pairs.length, 0);
+  }
+
   // ============================================
   // STATE
   // ============================================
@@ -847,16 +853,22 @@
     recordAttempt(isCorrect);
   }
 
+  // ============================================
+  // GLOBAL NEXT/PREVIOUS (ACROSS ALL GROUPS)
+  // ============================================
   function nextPair() {
-    const group = groups[gIndex];
-    const total = group.pairs.length;
-
+    const totalPairs = getTotalPairsCount();
     let attempts = 0;
+
     do {
-      pIndex = (pIndex + 1) % total;
+      pIndex++;
+      if (pIndex >= groups[gIndex].pairs.length) {
+        pIndex = 0;
+        gIndex = (gIndex + 1) % groups.length;
+      }
       attempts++;
-      if (attempts > total) {
-        // all pairs in this group are hidden
+      if (attempts > totalPairs) {
+        // all pairs are hidden
         break;
       }
     } while (isPairHidden(gIndex, pIndex));
@@ -866,17 +878,19 @@
     updateUI();
   }
 
-  // go to previous pair (respecting hidden ones)
   function previousPair() {
-    const group = groups[gIndex];
-    const total = group.pairs.length;
-
+    const totalPairs = getTotalPairsCount();
     let attempts = 0;
+
     do {
-      pIndex = (pIndex - 1 + total) % total;
+      pIndex--;
+      if (pIndex < 0) {
+        gIndex = (gIndex - 1 + groups.length) % groups.length;
+        pIndex = groups[gIndex].pairs.length - 1;
+      }
       attempts++;
-      if (attempts > total) {
-        // all pairs in this group are hidden
+      if (attempts > totalPairs) {
+        // all pairs are hidden
         break;
       }
     } while (isPairHidden(gIndex, pIndex));
