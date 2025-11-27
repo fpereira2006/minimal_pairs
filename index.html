@@ -67,7 +67,6 @@
       opacity: 0.5;
     }
 
-    /* favorito: adiciona um coração no menu */
     .pair-button.favorite::after {
       content: " ♥";
       color: #fbbf24;
@@ -84,7 +83,7 @@
     }
 
     .card {
-      position: relative; /* necessário para o coração no canto */
+      position: relative;
       background: #fff;
       padding: 24px;
       border-radius: 16px;
@@ -95,7 +94,6 @@
       will-change: transform, opacity;
     }
 
-    /* coração no canto superior direito do card */
     .favorite-heart {
       position: absolute;
       top: 8px;
@@ -105,12 +103,12 @@
       cursor: pointer;
       font-size: 1.5rem;
       line-height: 1;
-      color: #d1d5db; /* cinza claro quando vazio */
+      color: #d1d5db;
       padding: 0;
     }
 
     .favorite-heart.favorited {
-      color: #ef4444; /* vermelho quando favorito */
+      color: #ef4444;
     }
 
     #ipaLabel {
@@ -321,7 +319,7 @@
 
 <main class="main">
   <div class="card" id="card">
-    <!-- coração no canto direito -->
+    <!-- heart icon -->
     <button id="favoriteHeart" class="favorite-heart" aria-label="Favorite this pair">♡</button>
 
     <div id="ipaLabel"></div>
@@ -351,11 +349,6 @@
     <label style="display:block; margin-top: 12px; font-size: 0.85rem;">
       <input type="checkbox" id="skipPairCheckbox">
       Skip this pair in practice
-    </label>
-
-    <label style="display:block; margin-top: 8px; font-size: 0.85rem;">
-      <input type="checkbox" id="favoritePairCheckbox">
-      Favorite this pair ♥
     </label>
 
     <button class="btn" id="clearPairBtn" style="margin-top: 12px;">Clear stats for this pair</button>
@@ -830,7 +823,6 @@
   const clearPairBtn = document.getElementById("clearPairBtn");
   const clearAllBtn = document.getElementById("clearAllBtn");
   const skipPairCheckbox = document.getElementById("skipPairCheckbox");
-  const favoritePairCheckbox = document.getElementById("favoritePairCheckbox");
   const onlyFavoritesCheckbox = document.getElementById("onlyFavoritesCheckbox");
   const toggleMenuBtn = document.getElementById("toggleMenuBtn");
   const sidebarElement = document.querySelector(".sidebar");
@@ -997,8 +989,6 @@
     updateStatsDisplay();
 
     skipPairCheckbox.checked = isPairHidden(gIndex, pIndex);
-    const fav = isPairFavorite(gIndex, pIndex);
-    favoritePairCheckbox.checked = fav;
     updateFavoriteHeartVisual();
   }
 
@@ -1096,11 +1086,6 @@
     return false;
   }
 
-  // NEXT/PREV ACROSS ALL GROUPS (respecting hidden + favorites)
-  function getTotalPairsCount() {
-    return groups.reduce((sum, g) => sum + g.pairs.length, 0);
-  }
-
   function nextPair() {
     const totalPairs = getTotalPairsCount();
     let attempts = 0;
@@ -1184,17 +1169,12 @@
 
   function updateFavoriteState(favorite) {
     setPairFavorite(gIndex, pIndex, favorite);
-    favoritePairCheckbox.checked = favorite;
     updateFavoriteHeartVisual();
     const activeBtn = document.querySelector(".pair-button.active");
     if (activeBtn) {
       activeBtn.classList.toggle("favorite", favorite);
     }
   }
-
-  favoritePairCheckbox.addEventListener("change", () => {
-    updateFavoriteState(favoritePairCheckbox.checked);
-  });
 
   favoriteHeart.addEventListener("click", () => {
     const newFav = !isPairFavorite(gIndex, pIndex);
@@ -1252,7 +1232,7 @@
       card.style.transform = "translateX(" + (-direction * screenWidth) + "px)";
       card.style.opacity = "0";
       void card.offsetWidth;
-      card.style.transition = "transform 0.25s ease, opacity 0.25s ease";
+      card.style.transition = "transform 0.25s.ease, opacity 0.25s ease";
       card.style.transform = "translateX(0)";
       card.style.opacity = "1";
     }, 250);
