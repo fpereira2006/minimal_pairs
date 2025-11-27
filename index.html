@@ -175,10 +175,12 @@
        =========================== */
     @media (max-width: 768px) {
       body {
-        height: 100dvh;       /* altura dinâmica da viewport no mobile */
+        height: 100dvh;
         min-height: 100dvh;
         flex-direction: column;
-        overflow: hidden;     /* remove scroll global */
+        /* permite scroll global para pull-to-refresh,
+           mas mantendo o conteúdo cabendo na tela */
+        overflow-y: auto;
       }
 
       .menu-toggle {
@@ -220,20 +222,21 @@
       }
 
       .main {
-        padding: 16px;
-        padding-top: 56px; /* espaço pro botão fixo */
+        /* espaço pro botão fixo + um pouco de respiro */
+        padding: 64px 16px 16px;
         align-items: stretch;
-        flex: 1 1 auto;
-        overflow: hidden;  /* sem scroll aqui também */
+        flex: 0 0 auto;
+        /* deixa o body controlar o scroll, sem scroll interno aqui */
+        overflow: visible;
       }
 
       .card {
         width: 100%;
         max-width: 100%;
         padding: 16px;
-        /* garante que caiba bem em altura normal de telefone */
-        max-height: calc(100dvh - 72px);
-        overflow: hidden;
+        /* garante que caiba dentro da viewport, sem empurrar pra baixo */
+        max-height: calc(100dvh - 80px);
+        overflow: auto; /* se faltar espaço, só o conteúdo interno rola */
       }
 
       .btn {
