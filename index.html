@@ -178,8 +178,8 @@
         height: 100dvh;
         min-height: 100dvh;
         flex-direction: column;
-        /* permite scroll global para pull-to-refresh,
-           mas mantendo o conteúdo cabendo na tela */
+        /* allows global scroll for pull-to-refresh,
+           but content still fits on screen */
         overflow-y: auto;
       }
 
@@ -188,7 +188,7 @@
         position: fixed;
         top: 8px;
         left: 8px;
-        z-index: 1000;
+        z-index: 1001;
         padding: 8px 12px;
         border-radius: 999px;
         border: none;
@@ -197,6 +197,19 @@
         font-size: 0.9rem;
         box-shadow: 0 4px 10px rgba(0,0,0,0.25);
         cursor: pointer;
+      }
+
+      /* backdrop behind the sidebar when open */
+      .menu-backdrop {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 998;
+      }
+
+      .menu-backdrop.open {
+        display: block;
       }
 
       .sidebar {
@@ -222,11 +235,10 @@
       }
 
       .main {
-        /* espaço pro botão fixo + um pouco de respiro */
+        /* space for the fixed button + some breathing room */
         padding: 64px 16px 16px;
         align-items: stretch;
         flex: 0 0 auto;
-        /* deixa o body controlar o scroll, sem scroll interno aqui */
         overflow: visible;
       }
 
@@ -234,9 +246,9 @@
         width: 100%;
         max-width: 100%;
         padding: 16px;
-        /* garante que caiba dentro da viewport, sem empurrar pra baixo */
+        /* make sure it fits inside viewport without pushing down */
         max-height: calc(100dvh - 80px);
-        overflow: auto; /* se faltar espaço, só o conteúdo interno rola */
+        overflow: auto; /* if it overflows, only inner content scrolls */
       }
 
       .btn {
@@ -260,6 +272,8 @@
 
 <!-- Mobile menu button -->
 <button class="menu-toggle" id="toggleMenuBtn">☰ Pairs</button>
+<!-- Backdrop for mobile menu -->
+<div class="menu-backdrop" id="menuBackdrop"></div>
 
 <aside class="sidebar">
   <h1>Minimal Pair Groups</h1>
@@ -570,6 +584,7 @@
   const skipPairCheckbox = document.getElementById("skipPairCheckbox");
   const toggleMenuBtn = document.getElementById("toggleMenuBtn");
   const sidebarElement = document.querySelector(".sidebar");
+  const menuBackdrop = document.getElementById("menuBackdrop");
 
   // ============================================
   // SIDEBAR
@@ -602,9 +617,10 @@
           lastPlayedFile = null;
           updateUI();
 
-          // on mobile, close the menu after selecting a pair
+          // on mobile, close the menu and backdrop after selecting a pair
           if (window.innerWidth <= 768) {
             sidebarElement.classList.remove("open");
+            menuBackdrop.classList.remove("open");
           }
         });
 
@@ -870,7 +886,17 @@
 
   // toggle sidebar on mobile
   toggleMenuBtn.addEventListener("click", () => {
-    sidebarElement.classList.toggle("open");
+    const willOpen = !sidebarElement.classList.contains("open");
+    sidebarElement.classList.toggle("open", willOpen);
+    if (window.innerWidth <= 768) {
+      menuBackdrop.classList.toggle("open", willOpen);
+    }
+  });
+
+  // click on backdrop closes sidebar (mobile)
+  menuBackdrop.addEventListener("click", () => {
+    sidebarElement.classList.remove("open");
+    menuBackdrop.classList.remove("open");
   });
 
   document.addEventListener("click", (e) => {
