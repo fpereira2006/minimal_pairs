@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Minimal Pair Listening Game</title>
-  <!-- Responsive viewport + try to limit zoom on mobile -->
   <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
@@ -18,7 +17,6 @@
       background: #f5f5f5;
     }
 
-    /* mobile menu button (hidden on desktop) */
     .menu-toggle {
       display: none;
     }
@@ -64,10 +62,17 @@
     .pair-button:hover { background: #374151; }
     .pair-button.active { background: #4f46e5; }
 
-    /* skipped pairs in sidebar (strikethrough + lighter) */
     .pair-button.skipped {
       text-decoration: line-through;
       opacity: 0.5;
+    }
+
+    /* favorito: adiciona um coração no menu */
+    .pair-button.favorite::after {
+      content: " ♥";
+      color: #fbbf24;
+      margin-left: 4px;
+      font-size: 0.85rem;
     }
 
     .main {
@@ -85,13 +90,12 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       width: 480px;
       max-width: 100%;
-      /* animation for swipe */
       transition: transform 0.25s ease, opacity 0.25s ease;
       will-change: transform, opacity;
     }
 
     #ipaLabel {
-      font-size: 1.3rem;      /* bigger group label */
+      font-size: 1.3rem;
       font-weight: 600;
       color: #6b7280;
       margin-bottom: 4px;
@@ -176,7 +180,6 @@
       min-height: 1.2em;
     }
 
-    /* WORDS IN RESULT — BIGGER & CLICKABLE */
     .word-option {
       cursor: pointer;
       text-decoration: underline;
@@ -188,9 +191,6 @@
     .word-correct { color: #16a34a !important; font-weight: 700; }
     .word-wrong   { color: #dc2626 !important; font-weight: 700; }
 
-    /* ===========================
-       RESPONSIVE (mobile)
-       =========================== */
     @media (max-width: 768px) {
       body {
         height: 100dvh;
@@ -293,6 +293,10 @@
 <aside class="sidebar">
   <h1>Minimal Pair Groups</h1>
   <button class="btn" id="clearAllBtn">Clear all stats</button>
+  <label style="display:block; margin-top: 8px; font-size: 0.85rem;">
+    <input type="checkbox" id="onlyFavoritesCheckbox">
+    Practice only favorites
+  </label>
   <div id="sidebar-content"></div>
 </aside>
 
@@ -327,6 +331,11 @@
       Skip this pair in practice
     </label>
 
+    <label style="display:block; margin-top: 8px; font-size: 0.85rem;">
+      <input type="checkbox" id="favoritePairCheckbox">
+      Favorite this pair ♥
+    </label>
+
     <button class="btn" id="clearPairBtn" style="margin-top: 12px;">Clear stats for this pair</button>
   </div>
 </main>
@@ -334,9 +343,7 @@
 <audio id="audio"></audio>
 
 <script>
-  // ============================================
   // DATA
-  // ============================================
   const groups = [
     {
       label: "/ɪ/ × /iː/",
@@ -488,7 +495,6 @@
     }
   ];
 
-  // IPA map (General American; non-words are phonetic guesses).
   const ipaMap = {
     live: "/lɪv/",
     leave: "/liːv/",
@@ -514,7 +520,6 @@
     heme: "/hiːm/",
     quit: "/kwɪt/",
     queet: "/kwiːt/",
-
     man: "/mæn/",
     men: "/mɛn/",
     bad: "/bæd/",
@@ -539,7 +544,6 @@
     beg: "/bɛɡ/",
     snack: "/snæk/",
     neck: "/nɛk/",
-
     luck: "/lʌk/",
     lock: "/lɑk/",
     cut: "/kʌt/",
@@ -564,7 +568,6 @@
     Hong: "/hɑŋ/",
     bud: "/bʌd/",
     bod: "/bɑd/",
-
     full: "/fʊl/",
     fool: "/fuːl/",
     pull: "/pʊl/",
@@ -586,7 +589,6 @@
     shoo: "/ʃuː/",
     should: "/ʃʊd/",
     shooed: "/ʃuːd/",
-
     thin: "/θɪn/",
     tin: "/tɪn/",
     thick: "/θɪk/",
@@ -611,7 +613,6 @@
     tree: "/triː/",
     threw: "/θruː/",
     true: "/truː/",
-
     these: "/ðiːz/",
     dees: "/diːz/",
     then: "/ðɛn/",
@@ -635,7 +636,6 @@
     udder: "/ˈʌdər/",
     mother: "/ˈmʌðər/",
     mutter: "/ˈmʌtər/",
-
     cheap: "/tʃiːp/",
     sheep: "/ʃiːp/",
     chip: "/tʃɪp/",
@@ -659,8 +659,6 @@
     shore: "/ʃɔr/",
     choice: "/tʃɔɪs/",
     Joyce: "/dʒɔɪs/",
-
-    bus: "/bʌs/",
     buzz: "/bʌz/",
     ice: "/aɪs/",
     eyes: "/aɪz/",
@@ -676,13 +674,13 @@
     his: "/hɪz/",
     class: "/klæs/",
     Claus: "/klɔːz/",
-
     cub: "/kʌb/",
     cup: "/kʌp/",
     rib: "/rɪb/",
     rip: "/rɪp/",
     cab: "/kæb/",
     cap: "/kæp/",
+    bad: "/bæd/",
     bat: "/bæt/",
     pad: "/pæd/",
     pat: "/pæt/",
@@ -736,7 +734,7 @@
     return Math.round((correct * 100) / attempts) + "%";
   }
 
-  // PREFS (HIDDEN / SKIPPED PAIRS)
+  // PREFS (hidden + favorites)
   function loadPrefsMap() {
     try {
       const raw = localStorage.getItem("mp_prefs");
@@ -755,19 +753,35 @@
     }
   }
 
+  function prefsKey(g, p) {
+    return "group" + g + "_pair" + p;
+  }
+
   function isPairHidden(g, p) {
     const prefs = loadPrefsMap();
-    const key = "group" + g + "_pair" + p;
+    const key = prefsKey(g, p);
     return prefs[key] && prefs[key].hidden === true;
   }
 
   function setPairHidden(g, p, hidden) {
     const prefs = loadPrefsMap();
-    const key = "group" + g + "_pair" + p;
-    if (!prefs[key]) {
-      prefs[key] = {};
-    }
+    const key = prefsKey(g, p);
+    if (!prefs[key]) prefs[key] = {};
     prefs[key].hidden = hidden;
+    savePrefsMap(prefs);
+  }
+
+  function isPairFavorite(g, p) {
+    const prefs = loadPrefsMap();
+    const key = prefsKey(g, p);
+    return prefs[key] && prefs[key].favorite === true;
+  }
+
+  function setPairFavorite(g, p, favorite) {
+    const prefs = loadPrefsMap();
+    const key = prefsKey(g, p);
+    if (!prefs[key]) prefs[key] = {};
+    prefs[key].favorite = favorite;
     savePrefsMap(prefs);
   }
 
@@ -785,21 +799,24 @@
   const sidebar = document.getElementById("sidebar-content");
   const ipaLabel = document.getElementById("ipaLabel");
   const pairLabel = document.getElementById("pairLabel");
-
   const playBtn = document.getElementById("playBtn");
   const nextBtn = document.getElementById("nextBtn");
-
   const revealValue = document.getElementById("revealValue");
   const statusText = document.getElementById("statusText");
   const audio = document.getElementById("audio");
-
   const clearPairBtn = document.getElementById("clearPairBtn");
   const clearAllBtn = document.getElementById("clearAllBtn");
   const skipPairCheckbox = document.getElementById("skipPairCheckbox");
+  const favoritePairCheckbox = document.getElementById("favoritePairCheckbox");
+  const onlyFavoritesCheckbox = document.getElementById("onlyFavoritesCheckbox");
   const toggleMenuBtn = document.getElementById("toggleMenuBtn");
   const sidebarElement = document.querySelector(".sidebar");
   const menuBackdrop = document.getElementById("menuBackdrop");
   const card = document.getElementById("card");
+
+  function onlyFavoritesOn() {
+    return !!onlyFavoritesCheckbox.checked;
+  }
 
   // SIDEBAR
   function renderSidebar() {
@@ -818,9 +835,8 @@
         btn.dataset.p = pi;
         btn.textContent = pair.a + " × " + pair.b;
 
-        if (isPairHidden(gi, pi)) {
-          btn.classList.add("skipped");
-        }
+        if (isPairHidden(gi, pi)) btn.classList.add("skipped");
+        if (isPairFavorite(gi, pi)) btn.classList.add("favorite");
 
         btn.addEventListener("click", () => {
           gIndex = gi;
@@ -850,7 +866,7 @@
 
   // STATS
   function updateStatsDisplay() {
-    const statsKey = "group" + gIndex + "_pair" + pIndex;
+    const statsKey = prefsKey(gIndex, pIndex);
     const statsMap = loadStatsMap();
     let list = statsMap[statsKey] || [];
     const today = getToday();
@@ -884,7 +900,7 @@
   }
 
   function clearStatsForCurrentPair() {
-    const statsKey = "group" + gIndex + "_pair" + pIndex;
+    const statsKey = prefsKey(gIndex, pIndex);
     const statsMap = loadStatsMap();
     if (statsMap.hasOwnProperty(statsKey)) {
       delete statsMap[statsKey];
@@ -945,7 +961,9 @@
     updateSidebarActive();
     clearWordColors();
     updateStatsDisplay();
+
     skipPairCheckbox.checked = isPairHidden(gIndex, pIndex);
+    favoritePairCheckbox.checked = isPairFavorite(gIndex, pIndex);
   }
 
   function clearWordColors() {
@@ -956,7 +974,7 @@
     optB.classList.remove("word-correct", "word-wrong");
   }
 
-  // AUDIO + GAME LOGIC
+  // AUDIO
   function playVariant(baseWord, n) {
     clearWordColors();
     const file = baseWord + "_" + n;
@@ -991,7 +1009,7 @@
   }
 
   function recordAttempt(isCorrect) {
-    const statsKey = "group" + gIndex + "_pair" + pIndex;
+    const statsKey = prefsKey(gIndex, pIndex);
     const today = getToday();
 
     const statsMap = loadStatsMap();
@@ -1033,11 +1051,17 @@
 
     recordAttempt(isCorrect);
 
-    // After 1 second, behave like the old Sort button
     setTimeout(sortWord, 1000);
   }
 
-  // NEXT/PREV ACROSS ALL GROUPS
+  // FILTER USED IN NAVIGATION
+  function shouldSkipForNavigation(g, p) {
+    if (isPairHidden(g, p)) return true;
+    if (onlyFavoritesOn() && !isPairFavorite(g, p)) return true;
+    return false;
+  }
+
+  // NEXT/PREV ACROSS ALL GROUPS (respecting hidden + favorites)
   function nextPair() {
     const totalPairs = getTotalPairsCount();
     let attempts = 0;
@@ -1050,7 +1074,7 @@
       }
       attempts++;
       if (attempts > totalPairs) break;
-    } while (isPairHidden(gIndex, pIndex));
+    } while (shouldSkipForNavigation(gIndex, pIndex));
 
     lastPlayedWord = null;
     lastPlayedFile = null;
@@ -1069,14 +1093,13 @@
       }
       attempts++;
       if (attempts > totalPairs) break;
-    } while (isPairHidden(gIndex, pIndex));
+    } while (shouldSkipForNavigation(gIndex, pIndex));
 
     lastPlayedWord = null;
     lastPlayedFile = null;
     updateUI();
   }
 
-  // FIRST NON-HIDDEN ON LOAD
   function selectFirstVisiblePair() {
     const totalPairs = getTotalPairsCount();
     let checked = 0;
@@ -1084,7 +1107,7 @@
     for (let gi = 0; gi < groups.length; gi++) {
       for (let pi = 0; pi < groups[gi].pairs.length; pi++) {
         checked++;
-        if (!isPairHidden(gi, pi)) {
+        if (!shouldSkipForNavigation(gi, pi)) {
           gIndex = gi;
           pIndex = pi;
           updateUI();
@@ -1118,6 +1141,19 @@
     if (activeBtn) {
       activeBtn.classList.toggle("skipped", skipPairCheckbox.checked);
     }
+  });
+
+  favoritePairCheckbox.addEventListener("change", () => {
+    setPairFavorite(gIndex, pIndex, favoritePairCheckbox.checked);
+    const activeBtn = document.querySelector(".pair-button.active");
+    if (activeBtn) {
+      activeBtn.classList.toggle("favorite", favoritePairCheckbox.checked);
+    }
+  });
+
+  onlyFavoritesCheckbox.addEventListener("change", () => {
+    // when changing mode, jump to first visible pair under that filter
+    selectFirstVisiblePair();
   });
 
   toggleMenuBtn.addEventListener("click", () => {
