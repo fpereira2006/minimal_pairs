@@ -12,9 +12,14 @@
     body {
       margin: 0;
       font-family: system-ui, sans-serif;
-      height: 100vh;          /* VOLTA a ser fixo no desktop */
+      height: 100vh;
       display: flex;
       background: #f5f5f5;
+    }
+
+    /* mobile menu button (hidden on desktop) */
+    .menu-toggle {
+      display: none;
     }
 
     .sidebar {
@@ -169,25 +174,54 @@
        =========================== */
     @media (max-width: 768px) {
       body {
-        height: auto;          /* no mobile pode passar de 100vh */
+        height: auto;
         min-height: 100vh;
         flex-direction: column;
       }
 
+      .menu-toggle {
+        display: inline-block;
+        position: fixed;
+        top: 8px;
+        left: 8px;
+        z-index: 1000;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: none;
+        background: #111827;
+        color: #e5e7eb;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+        cursor: pointer;
+      }
+
       .sidebar {
-        width: 100%;
-        border-right: none;
-        border-bottom: 3px solid #4f46e5;
-        max-height: 40vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        max-height: none;
+        width: 80%;
+        border-right: 3px solid #4f46e5;
+        border-bottom: none;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        z-index: 999;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
       }
 
       .sidebar h1 {
-        text-align: center;
+        text-align: left;
       }
 
       .main {
         padding: 16px;
         align-items: stretch;
+        /* dá espaço pra não ficar escondido pelo botão fixo */
+        padding-top: 56px;
       }
 
       .card {
@@ -214,6 +248,9 @@
 </head>
 
 <body>
+
+<!-- Botão de menu (só aparece no mobile via CSS) -->
+<button class="menu-toggle" id="toggleMenuBtn">☰ Pairs</button>
 
 <aside class="sidebar">
   <h1>Minimal Pair Groups</h1>
@@ -522,6 +559,8 @@
   const clearPairBtn = document.getElementById("clearPairBtn");
   const clearAllBtn = document.getElementById("clearAllBtn");
   const skipPairCheckbox = document.getElementById("skipPairCheckbox");
+  const toggleMenuBtn = document.getElementById("toggleMenuBtn");
+  const sidebarElement = document.querySelector(".sidebar");
 
   // ============================================
   // SIDEBAR
@@ -553,6 +592,11 @@
           lastPlayedWord = null;
           lastPlayedFile = null;
           updateUI();
+
+          // on mobile, close the menu after selecting a pair
+          if (window.innerWidth <= 768) {
+            sidebarElement.classList.remove("open");
+          }
         });
 
         sidebar.appendChild(btn);
@@ -565,7 +609,6 @@
       const gi = Number(btn.dataset.g);
       const pi = Number(btn.dataset.p);
 
-      // only handle active highlight here
       btn.classList.toggle(
         "active",
         gi === gIndex && pi === pIndex
@@ -601,9 +644,12 @@
     if (totalAttempts === 0) {
       statusText.textContent = "No stats yet for this pair.";
     } else {
-      const todayStr = todayCorrect + "/" + todayAttempts + " (" + formatPct(todayCorrect, todayAttempts) + ")";
-      const totalStr = totalCorrect + "/" + totalAttempts + " (" + formatPct(totalCorrect, totalAttempts) + ")";
-      statusText.textContent = "Stats for this pair – Today: " + todayStr + " | All time: " + totalStr;
+      const todayStr = todayCorrect + "/" + todayAttempts +
+        " (" + formatPct(todayCorrect, todayAttempts) + ")";
+      const totalStr = totalCorrect + "/" + totalAttempts +
+        " (" + formatPct(totalCorrect, totalAttempts) + ")";
+      statusText.textContent =
+        "Stats for this pair – Today: " + todayStr + " | All time: " + totalStr;
     }
   }
 
@@ -811,6 +857,11 @@
     if (activeBtn) {
       activeBtn.classList.toggle("skipped", skipPairCheckbox.checked);
     }
+  });
+
+  // toggle sidebar on mobile
+  toggleMenuBtn.addEventListener("click", () => {
+    sidebarElement.classList.toggle("open");
   });
 
   document.addEventListener("click", (e) => {
