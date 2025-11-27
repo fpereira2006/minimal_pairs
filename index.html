@@ -84,6 +84,7 @@
     }
 
     .card {
+      position: relative; /* necessário para o coração no canto */
       background: #fff;
       padding: 24px;
       border-radius: 16px;
@@ -92,6 +93,24 @@
       max-width: 100%;
       transition: transform 0.25s ease, opacity 0.25s ease;
       will-change: transform, opacity;
+    }
+
+    /* coração no canto superior direito do card */
+    .favorite-heart {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 1.5rem;
+      line-height: 1;
+      color: #d1d5db; /* cinza claro quando vazio */
+      padding: 0;
+    }
+
+    .favorite-heart.favorited {
+      color: #ef4444; /* vermelho quando favorito */
     }
 
     #ipaLabel {
@@ -302,6 +321,9 @@
 
 <main class="main">
   <div class="card" id="card">
+    <!-- coração no canto direito -->
+    <button id="favoriteHeart" class="favorite-heart" aria-label="Favorite this pair">♡</button>
+
     <div id="ipaLabel"></div>
 
     <div id="variantSelectorBox">
@@ -659,6 +681,7 @@
     shore: "/ʃɔr/",
     choice: "/tʃɔɪs/",
     Joyce: "/dʒɔɪs/",
+    bus: "/bʌs/",
     buzz: "/bʌz/",
     ice: "/aɪs/",
     eyes: "/aɪz/",
@@ -813,6 +836,7 @@
   const sidebarElement = document.querySelector(".sidebar");
   const menuBackdrop = document.getElementById("menuBackdrop");
   const card = document.getElementById("card");
+  const favoriteHeart = document.getElementById("favoriteHeart");
 
   function onlyFavoritesOn() {
     return !!onlyFavoritesCheckbox.checked;
@@ -929,6 +953,16 @@
     return html;
   }
 
+  function updateFavoriteHeartVisual() {
+    if (isPairFavorite(gIndex, pIndex)) {
+      favoriteHeart.classList.add("favorited");
+      favoriteHeart.textContent = "♥";
+    } else {
+      favoriteHeart.classList.remove("favorited");
+      favoriteHeart.textContent = "♡";
+    }
+  }
+
   function updateUI() {
     const group = groups[gIndex];
     const pair = group.pairs[pIndex];
@@ -963,7 +997,9 @@
     updateStatsDisplay();
 
     skipPairCheckbox.checked = isPairHidden(gIndex, pIndex);
-    favoritePairCheckbox.checked = isPairFavorite(gIndex, pIndex);
+    const fav = isPairFavorite(gIndex, pIndex);
+    favoritePairCheckbox.checked = fav;
+    updateFavoriteHeartVisual();
   }
 
   function clearWordColors() {
@@ -1050,7 +1086,6 @@
     }
 
     recordAttempt(isCorrect);
-
     setTimeout(sortWord, 1000);
   }
 
@@ -1062,6 +1097,10 @@
   }
 
   // NEXT/PREV ACROSS ALL GROUPS (respecting hidden + favorites)
+  function getTotalPairsCount() {
+    return groups.reduce((sum, g) => sum + g.pairs.length, 0);
+  }
+
   function nextPair() {
     const totalPairs = getTotalPairsCount();
     let attempts = 0;
@@ -1143,16 +1182,26 @@
     }
   });
 
-  favoritePairCheckbox.addEventListener("change", () => {
-    setPairFavorite(gIndex, pIndex, favoritePairCheckbox.checked);
+  function updateFavoriteState(favorite) {
+    setPairFavorite(gIndex, pIndex, favorite);
+    favoritePairCheckbox.checked = favorite;
+    updateFavoriteHeartVisual();
     const activeBtn = document.querySelector(".pair-button.active");
     if (activeBtn) {
-      activeBtn.classList.toggle("favorite", favoritePairCheckbox.checked);
+      activeBtn.classList.toggle("favorite", favorite);
     }
+  }
+
+  favoritePairCheckbox.addEventListener("change", () => {
+    updateFavoriteState(favoritePairCheckbox.checked);
+  });
+
+  favoriteHeart.addEventListener("click", () => {
+    const newFav = !isPairFavorite(gIndex, pIndex);
+    updateFavoriteState(newFav);
   });
 
   onlyFavoritesCheckbox.addEventListener("change", () => {
-    // when changing mode, jump to first visible pair under that filter
     selectFirstVisiblePair();
   });
 
