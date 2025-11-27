@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Minimal Pair Listening Game</title>
-  <!-- Responsive viewport -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Responsive viewport + disable zoom on mobile -->
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
   <style>
     * { box-sizing: border-box; }
@@ -174,9 +175,10 @@
        =========================== */
     @media (max-width: 768px) {
       body {
-        height: auto;
+        height: 100vh;        /* ocupa a tela inteira */
         min-height: 100vh;
         flex-direction: column;
+        overflow: hidden;     /* sem scroll global */
       }
 
       .menu-toggle {
@@ -219,9 +221,10 @@
 
       .main {
         padding: 16px;
+        padding-top: 56px; /* espaço pro botão fixo */
         align-items: stretch;
-        /* dá espaço pra não ficar escondido pelo botão fixo */
-        padding-top: 56px;
+        flex: 1;
+        overflow-y: auto;   /* se passar da tela, só o conteúdo rola */
       }
 
       .card {
@@ -306,16 +309,16 @@
       label: "/ɪ/ × /iː/",
       pairs: [
         { a: "live", b: "leave" },
-        { a: "fit", b: "feet" },
-        { a: "bit", b: "beat" },
-        { a: "sit", b: "seat" },
+        { a: "fit",  b: "feet"  },
+        { a: "bit",  b: "beat"  },
+        { a: "sit",  b: "seat"  },
         { a: "slip", b: "sleep" },
-        { a: "pick", b: "peak" },
-        { a: "lick", b: "leak" },
+        { a: "pick", b: "peak"  },
+        { a: "lick", b: "leak"  },
         { a: "ship", b: "sheep" },
         { a: "grin", b: "green" },
-        { a: "fill", b: "feel" },
-        { a: "him", b: "heme" },
+        { a: "fill", b: "feel"  },
+        { a: "him",  b: "heme"  },
         { a: "quit", b: "queet" }
       ]
     },
@@ -323,17 +326,17 @@
     {
       label: "/æ/ × /ɛ/",
       pairs: [
-        { a: "man", b: "men" },
-        { a: "bad", b: "bed" },
-        { a: "sad", b: "said" },
-        { a: "pack", b: "peck" },
-        { a: "back", b: "beck" },
-        { a: "gas", b: "guess" },
-        { a: "flash", b: "flesh" },
-        { a: "mad", b: "med" },
-        { a: "jam", b: "gem" },
-        { a: "cap", b: "kept" },
-        { a: "bag", b: "beg" },
+        { a: "man",   b: "men"  },
+        { a: "bad",   b: "bed"  },
+        { a: "sad",   b: "said" },
+        { a: "pack",  b: "peck" },
+        { a: "back",  b: "beck" },
+        { a: "gas",   b: "guess"},
+        { a: "flash", b: "flesh"},
+        { a: "mad",   b: "med"  },
+        { a: "jam",   b: "gem"  },
+        { a: "cap",   b: "kept" },
+        { a: "bag",   b: "beg"  },
         { a: "snack", b: "neck" }
       ]
     },
@@ -342,70 +345,70 @@
       label: "/ʌ/ × /ɑː/",
       pairs: [
         { a: "luck", b: "lock" },
-        { a: "cut", b: "cot" },
-        { a: "bus", b: "boss" },
+        { a: "cut",  b: "cot"  },
+        { a: "bus",  b: "boss" },
         { a: "shut", b: "shot" },
         { a: "much", b: "mock" },
-        { a: "cup", b: "cop" },
-        { a: "mud", b: "mod" },
+        { a: "cup",  b: "cop"  },
+        { a: "mud",  b: "mod"  },
         { a: "suck", b: "sock" },
-        { a: "nut", b: "not" },
-        { a: "rub", b: "rob" },
+        { a: "nut",  b: "not"  },
+        { a: "rub",  b: "rob"  },
         { a: "hung", b: "Hong" },
-        { a: "bud", b: "bod" }
+        { a: "bud",  b: "bod"  }
       ]
     },
 
     {
       label: "/ʊ/ × /uː/",
       pairs: [
-        { a: "full", b: "fool" },
-        { a: "pull", b: "pool" },
-        { a: "good", b: "gooed" },
-        { a: "foot", b: "food" },
-        { a: "book", b: "Luke" },
-        { a: "look", b: "Luke" },
-        { a: "cook", b: "kook" },
-        { a: "push", b: "poosh" },
-        { a: "soot", b: "suit" },
-        { a: "shook", b: "shoo" },
-        { a: "should", b: "shooed" }
+        { a: "full",   b: "fool" },
+        { a: "pull",   b: "pool" },
+        { a: "good",   b: "gooed"},
+        { a: "foot",   b: "food" },
+        { a: "book",   b: "Luke" },
+        { a: "look",   b: "Luke" },
+        { a: "cook",   b: "kook" },
+        { a: "push",   b: "poosh"},
+        { a: "soot",   b: "suit" },
+        { a: "shook",  b: "shoo" },
+        { a: "should", b: "shooed"}
       ]
     },
 
     {
       label: "/θ/ × /t/",
       pairs: [
-        { a: "thin", b: "tin" },
-        { a: "thick", b: "tick" },
-        { a: "think", b: "tink" },
-        { a: "thought", b: "taught" },
-        { a: "thief", b: "teeth" },
-        { a: "thaw", b: "taw" },
-        { a: "thigh", b: "tie" },
-        { a: "thank", b: "tank" },
-        { a: "theme", b: "team" },
+        { a: "thin",   b: "tin"   },
+        { a: "thick",  b: "tick"  },
+        { a: "think",  b: "tink"  },
+        { a: "thought",b: "taught"},
+        { a: "thief",  b: "teeth" },
+        { a: "thaw",   b: "taw"   },
+        { a: "thigh",  b: "tie"   },
+        { a: "thank",  b: "tank"  },
+        { a: "theme",  b: "team"  },
         { a: "thread", b: "tread" },
-        { a: "three", b: "tree" },
-        { a: "threw", b: "true" }
+        { a: "three",  b: "tree"  },
+        { a: "threw",  b: "true"  }
       ]
     },
 
     {
       label: "/ð/ × /d/",
       pairs: [
-        { a: "these", b: "dees" },
-        { a: "then", b: "den" },
-        { a: "they", b: "day" },
-        { a: "those", b: "doze" },
+        { a: "these",  b: "dees"  },
+        { a: "then",   b: "den"   },
+        { a: "they",   b: "day"   },
+        { a: "those",  b: "doze"  },
         { a: "though", b: "dough" },
-        { a: "this", b: "diss" },
-        { a: "that", b: "dat" },
-        { a: "them", b: "dem" },
-        { a: "there", b: "dare" },
-        { a: "their", b: "dare" },
-        { a: "other", b: "udder" },
-        { a: "mother", b: "mutter" }
+        { a: "this",   b: "diss"  },
+        { a: "that",   b: "dat"   },
+        { a: "them",   b: "dem"   },
+        { a: "there",  b: "dare"  },
+        { a: "their",  b: "dare"  },
+        { a: "other",  b: "udder" },
+        { a: "mother", b: "mutter"}
       ]
     },
 
@@ -413,45 +416,45 @@
       label: "/tʃ/ × /ʃ/",
       pairs: [
         { a: "cheap", b: "sheep" },
-        { a: "chip", b: "ship" },
-        { a: "chin", b: "shin" },
-        { a: "chew", b: "shoe" },
+        { a: "chip",  b: "ship"  },
+        { a: "chin",  b: "shin"  },
+        { a: "chew",  b: "shoe"  },
         { a: "chalk", b: "shock" },
-        { a: "chat", b: "shat" },
+        { a: "chat",  b: "shat"  },
         { a: "check", b: "sheck" },
         { a: "choke", b: "shook" },
-        { a: "churn", b: "shun" },
+        { a: "churn", b: "shun"  },
         { a: "chair", b: "share" },
         { a: "chore", b: "shore" },
-        { a: "choice", b: "Joyce" }
+        { a: "choice",b: "Joyce" }
       ]
     },
 
     {
       label: "/s/ × /z/",
       pairs: [
-        { a: "bus", b: "buzz" },
-        { a: "ice", b: "eyes" },
+        { a: "bus",   b: "buzz" },
+        { a: "ice",   b: "eyes" },
         { a: "loose", b: "lose" },
-        { a: "face", b: "phase" },
+        { a: "face",  b: "phase"},
         { a: "peace", b: "peas" },
-        { a: "rice", b: "rise" },
-        { a: "hiss", b: "his" },
-        { a: "class", b: "Claus" }
+        { a: "rice",  b: "rise" },
+        { a: "hiss",  b: "his"  },
+        { a: "class", b: "Claus"}
       ]
     },
 
     {
       label: "/b/–/p/, /d/–/t/, /g/–/k/",
       pairs: [
-        { a: "cub", b: "cup" },
-        { a: "rib", b: "rip" },
-        { a: "cab", b: "cap" },
-        { a: "bad", b: "bat" },
-        { a: "pad", b: "pat" },
-        { a: "seed", b: "seat" },
-        { a: "code", b: "coat" },
-        { a: "load", b: "lowed" },
+        { a: "cub", b: "cup"  },
+        { a: "rib", b: "rip"  },
+        { a: "cab", b: "cap"  },
+        { a: "bad", b: "bat"  },
+        { a: "pad", b: "pat"  },
+        { a: "seed",b: "seat" },
+        { a: "code",b: "coat" },
+        { a: "load",b: "lowed"},
         { a: "dog", b: "dock" },
         { a: "tag", b: "tack" },
         { a: "bag", b: "back" },
