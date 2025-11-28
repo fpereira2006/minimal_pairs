@@ -76,14 +76,8 @@
       display: flex;
       align-items: center;
       width: 100%;
-      justify-content: space-between;
+      justify-content: flex-start;
       gap: 6px;
-    }
-
-    .pair-rate {
-      min-width: 3.0rem;
-      font-size: 0.8rem;
-      color: #9ca3af;
     }
 
     .pair-main-label {
@@ -92,6 +86,14 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    /* rate + heart no canto direito; rate à esquerda do coração */
+    .pair-rate {
+      min-width: 3.0rem;
+      font-size: 0.8rem;
+      color: #9ca3af;
+      text-align: right;
     }
 
     .pair-heart {
@@ -861,7 +863,6 @@
     }
   }
 
-  // All-time accuracy for sidebar
   function getAllTimeAccuracyText(g, p) {
     const statsKey = prefsKey(g, p);
     const statsMap = loadStatsMap();
@@ -878,7 +879,6 @@
     return pct + "%";
   }
 
-  // STATE
   let gIndex = 0;
   let pIndex = 0;
   let lastPlayedWord = null;
@@ -929,8 +929,8 @@
 
         btn.innerHTML =
           '<div class="pair-content">' +
-            '<span class="pair-rate">' + (rateText || "") + '</span>' +
             '<span class="pair-main-label">' + pair.a + ' × ' + pair.b + '</span>' +
+            '<span class="pair-rate">' + (rateText || "") + '</span>' +
             '<span class="pair-heart">' + (favorite ? '♥' : '') + '</span>' +
           '</div>';
 
@@ -1066,27 +1066,35 @@
     ipaLabel.textContent = group.label;
 
     pairLabel.innerHTML =
-      pair.a + " " + makeVariantButtons(pair.a) +
+      pair.a +
+      " " +
+      makeVariantButtons(pair.a) +
       " &nbsp; × &nbsp; " +
-      pair.b + " " + makeVariantButtons(pair.b);
+      pair.b +
+      " " +
+      makeVariantButtons(pair.b);
 
     const leftIpa  = ipaMap[pair.a] || "";
     const rightIpa = ipaMap[pair.b] || "";
 
     revealValue.innerHTML =
       '<div class="word-col">' +
-        '<span id="optA" class="word-option" data-word="' + pair.a + '">' +
-          pair.a +
-        '</span>' +
-        '<div class="word-ipa">' + leftIpa + '</div>' +
-      '</div>' +
+        '<span id="optA" class="word-option" data-word="' +
+        pair.a +
+        '">' +
+        pair.a +
+        "</span>" +
+        '<div class="word-ipa">' + leftIpa + "</div>" +
+      "</div>" +
       '<div style="align-self:center; padding: 0 8px;">or</div>' +
       '<div class="word-col">' +
-        '<span id="optB" class="word-option" data-word="' + pair.b + '">' +
-          pair.b +
-        '</span>' +
-        '<div class="word-ipa">' + rightIpa + '</div>' +
-      '</div>';
+        '<span id="optB" class="word-option" data-word="' +
+        pair.b +
+        '">' +
+        pair.b +
+        "</span>" +
+        '<div class="word-ipa">' + rightIpa + "</div>" +
+      "</div>";
 
     updateSidebarActive();
     clearWordColors();
@@ -1182,7 +1190,7 @@
     const optA = document.getElementById("optA");
     const optB = document.getElementById("optB");
 
-    const isCorrect = (clickedWord === lastPlayedWord);
+    const isCorrect = clickedWord === lastPlayedWord;
 
     if (isCorrect) {
       if (optA.dataset.word === clickedWord) optA.classList.add("word-correct");
@@ -1196,7 +1204,6 @@
     setTimeout(sortWord, 1000);
   }
 
-  // NAV FILTER
   function shouldSkipForNavigation(g, p) {
     if (isPairHidden(g, p)) return true;
     if (onlyFavoritesOn() && !isPairFavorite(g, p)) return true;
@@ -1262,7 +1269,6 @@
     updateUI();
   }
 
-  // DRILL
   let drillRunning = false;
   let drillTimeoutId = null;
 
@@ -1294,7 +1300,6 @@
     playNext();
   }
 
-  // EVENTS
   variantSelector.addEventListener("change", () => {
     VARIANT_COUNT = Number(variantSelector.value);
     lastPlayedWord = null;
@@ -1353,7 +1358,6 @@
     }
   });
 
-  // SWIPE
   let touchStartX = null;
   let touchStartY = null;
   let isDragging = false;
@@ -1367,13 +1371,13 @@
   function animateToNewPair(direction, changePairFn) {
     const screenWidth = window.innerWidth || 400;
     card.style.transition = "transform 0.25s ease, opacity 0.25s ease";
-    card.style.transform = "translateX(" + (direction * screenWidth) + "px)";
+    card.style.transform = "translateX(" + direction * screenWidth + "px)";
     card.style.opacity = "0";
 
     setTimeout(() => {
       changePairFn();
       card.style.transition = "none";
-      card.style.transform = "translateX(" + (-direction * screenWidth) + "px)";
+      card.style.transform = "translateX(" + -direction * screenWidth + "px)";
       card.style.opacity = "0";
       void card.offsetWidth;
       card.style.transition = "transform 0.25s ease, opacity 0.25s ease";
@@ -1450,7 +1454,6 @@
     resetCardPosition();
   });
 
-  // INIT
   renderSidebar();
   if (!loadLastPairIndices()) {
     selectFirstVisiblePair();
