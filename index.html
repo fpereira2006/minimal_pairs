@@ -208,6 +208,9 @@
     .word-correct { color: #16a34a !important; font-weight: 700; }
     .word-wrong   { color: #dc2626 !important; font-weight: 700; }
 
+    /* destaque azul enquanto o drill toca aquela palavra */
+    .word-playing { color: #2563eb !important; }
+
     @media (max-width: 768px) {
       body {
         height: 100dvh;
@@ -254,7 +257,7 @@
         border-right: 3px solid #4f46e5;
         border-bottom: none;
         transform: translateX(-100%);
-        transition: transform 0.25s.ease;
+        transition: transform 0.25s ease;
         z-index: 999;
       }
 
@@ -335,10 +338,10 @@
 
     <div id="pairLabel"></div>
 
-    <!-- NOVO BOTÃO DE DRILL A/B -->
+    <!-- Drill button -->
     <button class="btn" id="drillBtn">Drill A/B (10x)</button>
 
-    <!-- BOTÃO PLAY RENOMEADO -->
+    <!-- Play button (renamed) -->
     <button class="btn" id="playBtn">▶ Play</button>
     <button class="btn desktop-only" id="nextBtn">Next Pair ➜</button>
 
@@ -808,7 +811,6 @@
     return groups.reduce((sum, g) => sum + g.pairs.length, 0);
   }
 
-  // Save / load last pair indices
   function saveLastPairIndices() {
     try {
       localStorage.setItem(
@@ -1032,13 +1034,23 @@
     const optA = document.getElementById("optA");
     const optB = document.getElementById("optB");
     if (!optA || !optB) return;
-    optA.classList.remove("word-correct", "word-wrong");
-    optB.classList.remove("word-correct", "word-wrong");
+    optA.classList.remove("word-correct", "word-wrong", "word-playing");
+    optB.classList.remove("word-correct", "word-wrong", "word-playing");
+  }
+
+  // destaca a palavra que está tocando no DRILL (azul)
+  function setDrillHighlight(word) {
+    const optA = document.getElementById("optA");
+    const optB = document.getElementById("optB");
+    if (optA) optA.classList.remove("word-playing");
+    if (optB) optB.classList.remove("word-playing");
+    if (!word) return;
+    if (optA && optA.dataset.word === word) optA.classList.add("word-playing");
+    if (optB && optB.dataset.word === word) optB.classList.add("word-playing");
   }
 
   // AUDIO
   function playVariant(baseWord, n) {
-    clearWordColors();
     const file = baseWord + "_" + n;
     lastPlayedWord = baseWord;
     lastPlayedFile = file;
@@ -1181,7 +1193,7 @@
     updateUI();
   }
 
-  // DRILL A/B (10x cada, 700ms)
+  // DRILL A/B (10x each, 700ms, highlight in blue)
   let drillRunning = false;
   let drillTimeoutId = null;
 
@@ -1200,10 +1212,12 @@
       if (count >= totalPlays) {
         drillRunning = false;
         drillTimeoutId = null;
+        setDrillHighlight(null); // remove blue highlight at the end
         return;
       }
-      const word = words[count % 2]; // alterna A, B, A, B...
-      playVariant(word, 1);         // sempre Variant 1
+      const word = words[count % 2]; // A, B, A, B...
+      setDrillHighlight(word);      // highlight current word in blue
+      playVariant(word, 1);         // variant 1 only
       count++;
       drillTimeoutId = setTimeout(playNext, intervalMs);
     }
