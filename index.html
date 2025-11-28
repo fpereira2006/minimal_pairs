@@ -48,7 +48,7 @@
 
     .pair-button {
       width: 100%;
-      padding: 6px 8px;
+      padding: 4px 6px;
       background: transparent;
       border: none;
       text-align: left;
@@ -56,6 +56,7 @@
       cursor: pointer;
       color: #e5e7eb;
       display: flex;
+      align-items: center;
       justify-content: space-between;
     }
 
@@ -67,11 +68,37 @@
       opacity: 0.5;
     }
 
-    .pair-button.favorite::after {
-      content: " ♥";
-      color: #fbbf24;
-      margin-left: 4px;
+    .pair-button.favorite {
+      font-weight: 600;
+    }
+
+    .pair-content {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .pair-rate {
+      min-width: 3.0rem;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .pair-main-label {
+      flex: 1;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pair-heart {
+      min-width: 1.2rem;
+      text-align: right;
       font-size: 0.85rem;
+      color: #fbbf24;
     }
 
     .main {
@@ -207,8 +234,6 @@
 
     .word-correct { color: #16a34a !important; font-weight: 700; }
     .word-wrong   { color: #dc2626 !important; font-weight: 700; }
-
-    /* destaque azul enquanto o drill toca aquela palavra */
     .word-playing { color: #2563eb !important; }
 
     @media (max-width: 768px) {
@@ -338,10 +363,7 @@
 
     <div id="pairLabel"></div>
 
-    <!-- Drill button -->
     <button class="btn" id="drillBtn">Drill A/B (10x)</button>
-
-    <!-- Play button (renamed) -->
     <button class="btn" id="playBtn">▶ Play</button>
     <button class="btn desktop-only" id="nextBtn">Next Pair ➜</button>
 
@@ -660,7 +682,6 @@
     cheap: "/tʃiːp/",
     sheep: "/ʃiːp/",
     chip: "/tʃɪp/",
-    ship: "/ʃɪp/",
     chin: "/tʃɪn/",
     shin: "/ʃɪn/",
     chew: "/tʃuː/",
@@ -840,6 +861,23 @@
     }
   }
 
+  // All-time accuracy for sidebar
+  function getAllTimeAccuracyText(g, p) {
+    const statsKey = prefsKey(g, p);
+    const statsMap = loadStatsMap();
+    const list = statsMap[statsKey] || [];
+    let totalAttempts = 0;
+    let totalCorrect = 0;
+    for (const entry of list) {
+      const data = entry.data;
+      totalAttempts += data.attempts;
+      totalCorrect += data.correct;
+    }
+    if (!totalAttempts) return "";
+    const pct = Math.round((totalCorrect * 100) / totalAttempts);
+    return pct + "%";
+  }
+
   // STATE
   let gIndex = 0;
   let pIndex = 0;
@@ -885,10 +923,19 @@
         btn.className = "pair-button";
         btn.dataset.g = gi;
         btn.dataset.p = pi;
-        btn.textContent = pair.a + " × " + pair.b;
+
+        const rateText = getAllTimeAccuracyText(gi, pi);
+        const favorite = isPairFavorite(gi, pi);
+
+        btn.innerHTML =
+          '<div class="pair-content">' +
+            '<span class="pair-rate">' + (rateText || "") + '</span>' +
+            '<span class="pair-main-label">' + pair.a + ' × ' + pair.b + '</span>' +
+            '<span class="pair-heart">' + (favorite ? '♥' : '') + '</span>' +
+          '</div>';
 
         if (isPairHidden(gi, pi)) btn.classList.add("skipped");
-        if (isPairFavorite(gi, pi)) btn.classList.add("favorite");
+        if (favorite) btn.classList.add("favorite");
 
         btn.addEventListener("click", () => {
           gIndex = gi;
@@ -914,6 +961,24 @@
       const pi = Number(btn.dataset.p);
       btn.classList.toggle("active", gi === gIndex && pi === pIndex);
     });
+  }
+
+  function refreshSidebarVisualForPair(g, p) {
+    const selector = '.pair-button[data-g="' + g + '"][data-p="' + p + '"]';
+    const btn = document.querySelector(selector);
+    if (!btn) return;
+    const rateSpan = btn.querySelector(".pair-rate");
+    const heartSpan = btn.querySelector(".pair-heart");
+
+    if (rateSpan) {
+      rateSpan.textContent = getAllTimeAccuracyText(g, p);
+    }
+    if (heartSpan) {
+      heartSpan.textContent = isPairFavorite(g, p) ? "♥" : "";
+    }
+
+    btn.classList.toggle("favorite", isPairFavorite(g, p));
+    btn.classList.toggle("skipped", isPairHidden(g, p));
   }
 
   // STATS
@@ -959,11 +1024,14 @@
       saveStatsMap(statsMap);
     }
     updateStatsDisplay();
+    refreshSidebarVisualForPair(gIndex, pIndex);
   }
 
   function clearAllStats() {
     localStorage.removeItem("mp_stats");
     updateStatsDisplay();
+    renderSidebar();
+    updateSidebarActive();
   }
 
   // UI
@@ -1038,7 +1106,6 @@
     optB.classList.remove("word-correct", "word-wrong", "word-playing");
   }
 
-  // destaca a palavra que está tocando no DRILL (azul)
   function setDrillHighlight(word) {
     const optA = document.getElementById("optA");
     const optB = document.getElementById("optB");
@@ -1102,7 +1169,9 @@
 
     statsMap[statsKey] = list;
     saveStatsMap(statsMap);
+
     updateStatsDisplay();
+    refreshSidebarVisualForPair(gIndex, pIndex);
   }
 
   function handleWordGuess(clickedWord) {
@@ -1193,7 +1262,7 @@
     updateUI();
   }
 
-  // DRILL A/B (10x each, 700ms, highlight in blue)
+  // DRILL
   let drillRunning = false;
   let drillTimeoutId = null;
 
@@ -1212,12 +1281,12 @@
       if (count >= totalPlays) {
         drillRunning = false;
         drillTimeoutId = null;
-        setDrillHighlight(null); // remove blue highlight at the end
+        setDrillHighlight(null);
         return;
       }
-      const word = words[count % 2]; // A, B, A, B...
-      setDrillHighlight(word);      // highlight current word in blue
-      playVariant(word, 1);         // variant 1 only
+      const word = words[count % 2];
+      setDrillHighlight(word);
+      playVariant(word, 1);
       count++;
       drillTimeoutId = setTimeout(playNext, intervalMs);
     }
@@ -1242,19 +1311,13 @@
 
   skipPairCheckbox.addEventListener("change", () => {
     setPairHidden(gIndex, pIndex, skipPairCheckbox.checked);
-    const activeBtn = document.querySelector(".pair-button.active");
-    if (activeBtn) {
-      activeBtn.classList.toggle("skipped", skipPairCheckbox.checked);
-    }
+    refreshSidebarVisualForPair(gIndex, pIndex);
   });
 
   function updateFavoriteState(favorite) {
     setPairFavorite(gIndex, pIndex, favorite);
     updateFavoriteHeartVisual();
-    const activeBtn = document.querySelector(".pair-button.active");
-    if (activeBtn) {
-      activeBtn.classList.toggle("favorite", favorite);
-    }
+    refreshSidebarVisualForPair(gIndex, pIndex);
   }
 
   favoriteHeart.addEventListener("click", () => {
