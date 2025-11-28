@@ -254,7 +254,7 @@
         border-right: 3px solid #4f46e5;
         border-bottom: none;
         transform: translateX(-100%);
-        transition: transform 0.25s ease;
+        transition: transform 0.25s.ease;
         z-index: 999;
       }
 
@@ -335,7 +335,11 @@
 
     <div id="pairLabel"></div>
 
-    <button class="btn" id="playBtn">▶ Play (A)</button>
+    <!-- NOVO BOTÃO DE DRILL A/B -->
+    <button class="btn" id="drillBtn">Drill A/B (10x)</button>
+
+    <!-- BOTÃO PLAY RENOMEADO -->
+    <button class="btn" id="playBtn">▶ Play</button>
     <button class="btn desktop-only" id="nextBtn">Next Pair ➜</button>
 
     <div class="hidden-word-card" id="revealCard">
@@ -846,6 +850,7 @@
   const pairLabel = document.getElementById("pairLabel");
   const playBtn = document.getElementById("playBtn");
   const nextBtn = document.getElementById("nextBtn");
+  const drillBtn = document.getElementById("drillBtn");
   const revealValue = document.getElementById("revealValue");
   const statusText = document.getElementById("statusText");
   const audio = document.getElementById("audio");
@@ -1020,7 +1025,6 @@
     skipPairCheckbox.checked = isPairHidden(gIndex, pIndex);
     updateFavoriteHeartVisual();
 
-    // save last shown pair
     saveLastPairIndices();
   }
 
@@ -1111,7 +1115,7 @@
     setTimeout(sortWord, 1000);
   }
 
-  // FILTER FOR NAV
+  // NAV FILTER
   function shouldSkipForNavigation(g, p) {
     if (isPairHidden(g, p)) return true;
     if (onlyFavoritesOn() && !isPairFavorite(g, p)) return true;
@@ -1177,6 +1181,36 @@
     updateUI();
   }
 
+  // DRILL A/B (10x cada, 700ms)
+  let drillRunning = false;
+  let drillTimeoutId = null;
+
+  function drillBothWords() {
+    if (drillRunning) return;
+    const pair = groups[gIndex].pairs[pIndex];
+    const words = [pair.a, pair.b];
+    const repetitionsPerWord = 10;
+    const intervalMs = 700;
+    const totalPlays = repetitionsPerWord * 2;
+    let count = 0;
+
+    drillRunning = true;
+
+    function playNext() {
+      if (count >= totalPlays) {
+        drillRunning = false;
+        drillTimeoutId = null;
+        return;
+      }
+      const word = words[count % 2]; // alterna A, B, A, B...
+      playVariant(word, 1);         // sempre Variant 1
+      count++;
+      drillTimeoutId = setTimeout(playNext, intervalMs);
+    }
+
+    playNext();
+  }
+
   // EVENTS
   variantSelector.addEventListener("change", () => {
     VARIANT_COUNT = Number(variantSelector.value);
@@ -1187,6 +1221,7 @@
 
   playBtn.addEventListener("click", playWordA);
   nextBtn.addEventListener("click", nextPair);
+  drillBtn.addEventListener("click", drillBothWords);
 
   clearPairBtn.addEventListener("click", clearStatsForCurrentPair);
   clearAllBtn.addEventListener("click", clearAllStats);
@@ -1264,7 +1299,7 @@
       card.style.transform = "translateX(" + (-direction * screenWidth) + "px)";
       card.style.opacity = "0";
       void card.offsetWidth;
-      card.style.transition = "transform 0.25s.ease, opacity 0.25s ease";
+      card.style.transition = "transform 0.25s ease, opacity 0.25s ease";
       card.style.transform = "translateX(0)";
       card.style.opacity = "1";
     }, 250);
