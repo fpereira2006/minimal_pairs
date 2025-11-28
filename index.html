@@ -6,14 +6,6 @@
   <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-  <!-- Ícone para iPhone (180x180 recomendado) -->
-  <link rel="apple-touch-icon" href="icon-180.png">
-
-  <!-- Abrir como web app (sem barra de navegação do Safari) -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Minimal Pairs">
-
   <style>
     * { box-sizing: border-box; }
 
@@ -327,7 +319,6 @@
 
 <main class="main">
   <div class="card" id="card">
-    <!-- heart icon -->
     <button id="favoriteHeart" class="favorite-heart" aria-label="Favorite this pair">♡</button>
 
     <div id="ipaLabel"></div>
@@ -598,7 +589,7 @@
     good: "/ɡʊd/",
     gooed: "/ɡuːd/",
     foot: "/fʊt/",
-    food: "/fuːd/",
+    food: "/fuːt/",
     book: "/bʊk/",
     Luke: "/luːk/",
     look: "/lʊk/",
@@ -758,7 +749,7 @@
     return Math.round((correct * 100) / attempts) + "%";
   }
 
-  // PREFS (hidden + favorites)
+  // PREFS
   function loadPrefsMap() {
     try {
       const raw = localStorage.getItem("mp_prefs");
@@ -811,6 +802,36 @@
 
   function getTotalPairsCount() {
     return groups.reduce((sum, g) => sum + g.pairs.length, 0);
+  }
+
+  // Save / load last pair indices
+  function saveLastPairIndices() {
+    try {
+      localStorage.setItem(
+        "mp_last_pair",
+        JSON.stringify({ gIndex: gIndex, pIndex: pIndex })
+      );
+    } catch {
+      // ignore
+    }
+  }
+
+  function loadLastPairIndices() {
+    try {
+      const raw = localStorage.getItem("mp_last_pair");
+      if (!raw) return false;
+      const obj = JSON.parse(raw);
+      const gi = obj.gIndex;
+      const pi = obj.pIndex;
+      if (typeof gi !== "number" || typeof pi !== "number") return false;
+      if (!groups[gi] || !groups[gi].pairs[pi]) return false;
+      if (shouldSkipForNavigation(gi, pi)) return false;
+      gIndex = gi;
+      pIndex = pi;
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   // STATE
@@ -998,6 +1019,9 @@
 
     skipPairCheckbox.checked = isPairHidden(gIndex, pIndex);
     updateFavoriteHeartVisual();
+
+    // save last shown pair
+    saveLastPairIndices();
   }
 
   function clearWordColors() {
@@ -1087,7 +1111,7 @@
     setTimeout(sortWord, 1000);
   }
 
-  // FILTER USED IN NAVIGATION
+  // FILTER FOR NAV
   function shouldSkipForNavigation(g, p) {
     if (isPairHidden(g, p)) return true;
     if (onlyFavoritesOn() && !isPairFavorite(g, p)) return true;
@@ -1316,7 +1340,11 @@
 
   // INIT
   renderSidebar();
-  selectFirstVisiblePair();
+  if (!loadLastPairIndices()) {
+    selectFirstVisiblePair();
+  } else {
+    updateUI();
+  }
 </script>
 
 </body>
