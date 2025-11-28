@@ -88,7 +88,6 @@
       text-overflow: ellipsis;
     }
 
-    /* rate + heart no canto direito; rate à esquerda do coração */
     .pair-rate {
       min-width: 3.0rem;
       font-size: 0.8rem;
@@ -703,7 +702,7 @@
     shore: "/ʃɔr/",
     choice: "/tʃɔɪs/",
     Joyce: "/dʒɔɪs/",
-    bus: "/bʌs/",
+    bus2: "/bʌs/",   /* to avoid key clash; not used directly */
     buzz: "/bʌz/",
     ice: "/aɪs/",
     eyes: "/aɪz/",
@@ -724,8 +723,7 @@
     rib: "/rɪb/",
     rip: "/rɪp/",
     cab: "/kæb/",
-    cap: "/kæp/",
-    bad: "/bæd/",
+    cap2: "/kæp/",   /* not used directly */
     bat: "/bæt/",
     pad: "/pæd/",
     pat: "/pæt/",
@@ -741,6 +739,9 @@
     bug: "/bʌɡ/",
     buck: "/bʌk/"
   };
+
+  // we still rely on ipaMap[word] where keys match exactly;
+  // note: the duplicates with 2 suffix (bus2, cap2) are unused.
 
   let VARIANT_COUNT = 1;
 
@@ -978,7 +979,7 @@
     }
 
     btn.classList.toggle("favorite", isPairFavorite(g, p));
-    btn.classList.toggle("skipped", isPairHidden(g, p));
+    // NOTE: we do NOT touch .skipped here anymore, to avoid accidental strike-through
   }
 
   // STATS
@@ -1179,7 +1180,7 @@
     saveStatsMap(statsMap);
 
     updateStatsDisplay();
-    refreshSidebarVisualForPair(gIndex, pIndex);
+    refreshSidebarVisualForPair(gIndex, pIndex); // now only updates rate & heart
   }
 
   function handleWordGuess(clickedWord) {
@@ -1300,6 +1301,7 @@
     playNext();
   }
 
+  // EVENTS
   variantSelector.addEventListener("change", () => {
     VARIANT_COUNT = Number(variantSelector.value);
     lastPlayedWord = null;
@@ -1316,7 +1318,12 @@
 
   skipPairCheckbox.addEventListener("change", () => {
     setPairHidden(gIndex, pIndex, skipPairCheckbox.checked);
-    refreshSidebarVisualForPair(gIndex, pIndex);
+
+    // only here do we touch .skipped on the active button
+    const activeBtn = document.querySelector(".pair-button.active");
+    if (activeBtn) {
+      activeBtn.classList.toggle("skipped", skipPairCheckbox.checked);
+    }
   });
 
   function updateFavoriteState(favorite) {
@@ -1358,6 +1365,7 @@
     }
   });
 
+  // SWIPE
   let touchStartX = null;
   let touchStartY = null;
   let isDragging = false;
@@ -1454,6 +1462,7 @@
     resetCardPosition();
   });
 
+  // INIT
   renderSidebar();
   if (!loadLastPairIndices()) {
     selectFirstVisiblePair();
